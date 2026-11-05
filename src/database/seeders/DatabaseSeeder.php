@@ -50,6 +50,9 @@ class DatabaseSeeder extends Seeder
             Initiatives\TourismArchaeologyMuseumsSeeder::class,
             Initiatives\TransportMassTransitSeeder::class,
             Initiatives\WomenDevelopmentSeeder::class,
+
+            // Last, because it needs the admin user and every department and initiative.
+            AccessControlSeeder::class,
         ]);
     }
 }

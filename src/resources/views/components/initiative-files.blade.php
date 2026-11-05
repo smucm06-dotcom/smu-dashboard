@@ -8,10 +8,15 @@
 
     $currentList = $files->get($listType)?->first();
 
+    // Admins upload and delete. Everyone else sees the same lists, to download from.
+    $canManage = auth()->user()?->can('manage', $initiative) ?? false;
+
     $types = [
         $visitsType => [
             'button' => 'Upload CSV',
+            'viewButton' => 'Visit files',
             'icon' => 'upload',
+            'viewIcon' => 'file-spreadsheet',
             'title' => 'Upload visit records',
             'hint' => 'CSV or Excel (.xlsx), up to 20 MB',
             'accept' => '.csv,.xlsx',
@@ -38,6 +43,7 @@
         ],
         $reportType => [
             'button' => 'Upload report',
+            'viewButton' => 'Reports',
             'icon' => 'file-text',
             'title' => 'Upload report',
             'hint' => 'PDF only, up to 100 MB',
@@ -47,6 +53,7 @@
         ],
         $responseType => [
             'button' => 'Department response',
+            'viewButton' => 'Department responses',
             'icon' => 'file-check',
             'title' => 'Upload department response',
             'hint' => 'PDF, CSV or Excel (.xlsx), up to 100 MB',
@@ -73,15 +80,19 @@
 
     <div class="ifile-buttons">
         @foreach ($types as $type => $config)
-            @php $count = $files->get($type, collect())->count(); @endphp
+            @php
+                $count = $files->get($type, collect())->count();
+                $buttonText = $canManage ? $config['button'] : ($config['viewButton'] ?? $config['button']);
+                $buttonIcon = $canManage ? $config['icon'] : ($config['viewIcon'] ?? $config['icon']);
+            @endphp
             <button
                 type="button"
                 class="ifile-btn"
                 data-file-dialog="initiativeFileDialog-{{ $type }}"
-                aria-label="{{ $config['button'] }}, {{ number_format($count) }} uploaded"
+                aria-label="{{ $buttonText }}, {{ number_format($count) }} uploaded"
             >
-                <i data-lucide="{{ $config['icon'] }}" aria-hidden="true"></i>
-                {{ $config['button'] }}
+                <i data-lucide="{{ $buttonIcon }}" aria-hidden="true"></i>
+                {{ $buttonText }}
                 <span class="ifile-count" aria-hidden="true">{{ number_format($count) }}</span>
             </button>
         @endforeach
@@ -105,14 +116,17 @@
     >
         <div class="ifile-dialog-header">
             <div>
-                <h4 id="initiativeFileTitle-{{ $type }}">{{ $config['title'] }}</h4>
-                <p>{{ $config['hint'] }}</p>
+                <h4 id="initiativeFileTitle-{{ $type }}">{{ $canManage ? $config['title'] : $config['listTitle'].' ('.number_format($uploadedFiles->count()).')' }}</h4>
+                @if ($canManage)
+                    <p>{{ $config['hint'] }}</p>
+                @endif
             </div>
             <button type="button" class="ifile-dialog-close" data-file-dialog-close aria-label="Close">
                 <i data-lucide="x" aria-hidden="true"></i>
             </button>
         </div>
 
+        @if ($canManage)
         <form
             class="ifile-form"
             method="POST"
@@ -162,9 +176,12 @@
                 <button type="submit" class="ifile-btn ifile-btn--primary">Upload</button>
             </div>
         </form>
+        @endif
 
-        <section class="ifile-uploaded" aria-labelledby="initiativeFileList-{{ $type }}">
-            <h5 id="initiativeFileList-{{ $type }}">{{ $config['listTitle'] }} ({{ number_format($uploadedFiles->count()) }})</h5>
+        <section class="ifile-uploaded" aria-labelledby="{{ $canManage ? 'initiativeFileList-'.$type : 'initiativeFileTitle-'.$type }}">
+            @if ($canManage)
+                <h5 id="initiativeFileList-{{ $type }}">{{ $config['listTitle'] }} ({{ number_format($uploadedFiles->count()) }})</h5>
+            @endif
 
             @if ($uploadedFiles->isEmpty())
                 <p class="ifile-empty">{{ $config['empty'] }}</p>
@@ -179,7 +196,9 @@
                                     <th scope="col" class="is-numeric">Entries</th>
                                 @endif
                                 <th scope="col">Uploaded by</th>
-                                <th scope="col" class="ifile-action-cell" aria-label="Delete"></th>
+                                @if ($canManage)
+                                    <th scope="col" class="ifile-action-cell" aria-label="Delete"></th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -197,32 +216,34 @@
                                         <td class="is-numeric">{{ $file->row_count === null ? '—' : number_format($file->row_count) }}</td>
                                     @endif
                                     <td>{{ $file->uploader?->name ?? '—' }}</td>
-                                    <td class="ifile-action-cell">
-                                        <form
-                                            class="ifile-delete-form"
-                                            method="POST"
-                                            action="{{ route('initiatives.files.destroy', [$initiative, $file]) }}"
-                                            data-confirm="Delete &quot;{{ $file->original_name }}&quot;? {{ $config['deleteWarning'] ?? '' }} This cannot be undone."
-                                        >
-                                            @csrf
-                                            @method('DELETE')
-                                            <button
-                                                type="submit"
-                                                class="ifile-delete-btn"
-                                                aria-label="Delete {{ $file->original_name }}"
-                                                title="Delete"
+                                    @if ($canManage)
+                                        <td class="ifile-action-cell">
+                                            <form
+                                                class="ifile-delete-form"
+                                                method="POST"
+                                                action="{{ route('initiatives.files.destroy', [$initiative, $file]) }}"
+                                                data-confirm="Delete &quot;{{ $file->original_name }}&quot;? {{ $config['deleteWarning'] ?? '' }} This cannot be undone."
                                             >
-                                                <i data-lucide="trash-2" aria-hidden="true"></i>
-                                            </button>
-                                        </form>
-                                    </td>
+                                                @csrf
+                                                @method('DELETE')
+                                                <button
+                                                    type="submit"
+                                                    class="ifile-delete-btn"
+                                                    aria-label="Delete {{ $file->original_name }}"
+                                                    title="Delete"
+                                                >
+                                                    <i data-lucide="trash-2" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
 
-                @if ($isVisits)
+                @if ($isVisits && $canManage)
                     <p class="ifile-list-note">Deleting a file here removes only the file, not the visit records saved from it.</p>
                 @endif
             @endif
@@ -591,8 +612,8 @@
         });
 
         document.querySelectorAll('.ifile-dialog').forEach(function (dialog) {
+            // Only admins get the upload form.
             const uploadForm = dialog.querySelector('.ifile-form');
-            const submit = uploadForm.querySelector('button[type="submit"]');
 
             dialog.addEventListener('click', function (event) {
                 if (event.target === dialog || event.target.closest('[data-file-dialog-close]')) {
@@ -600,11 +621,13 @@
                 }
             });
 
-            uploadForm.addEventListener('submit', function (event) {
+            uploadForm?.addEventListener('submit', function (event) {
                 if (uploadForm.dataset.confirm && ! window.confirm(uploadForm.dataset.confirm)) {
                     event.preventDefault();
                     return;
                 }
+
+                const submit = uploadForm.querySelector('button[type="submit"]');
 
                 submit.disabled = true;
                 submit.dataset.uploading = '1';

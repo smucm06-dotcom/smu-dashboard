@@ -39,6 +39,24 @@
             <span class="nav-icon"><i data-lucide="chart-column-increasing"></i></span>
             <span class="nav-label">Reports</span>
         </div>
+
+        @can('manage-users')
+            <a href="{{ route('users.index') }}"
+               title="Users"
+               class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
+               >
+                <span class="nav-icon"><i data-lucide="users"></i></span>
+                <span class="nav-label">Users</span>
+            </a>
+        @endcan
+
+        <a href="{{ route('settings.index') }}"
+           title="Settings"
+           class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}"
+           >
+            <span class="nav-icon"><i data-lucide="settings"></i></span>
+            <span class="nav-label">Settings</span>
+        </a>
     </nav>
 
     <div class="sidebar-footer">

@@ -8,6 +8,11 @@ return new class extends Migration
     // Visits saved before the upload learned to correct these. See PsrpPhase2Import.
     public function up(): void
     {
+        // The automated tests start on an empty SQLite database, where there is nothing to correct.
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::table('public_school_reorganization_phase_2')
             ->where('visited_at', '<', '2025-01-01')
             ->update(['visited_at' => DB::raw('DATE_ADD(visited_at, INTERVAL 1 YEAR)')]);
