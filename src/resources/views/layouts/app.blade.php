@@ -1224,7 +1224,7 @@
             .app-topbar {
 
                 row-gap: clamp(10px, 2vh, 14px);
-                padding: 24px 24px;
+                padding: 30px 30px;
 
             }
             /* The bigger portrait leaves less room, so long titles still fit on one line. */
