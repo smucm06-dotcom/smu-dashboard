@@ -1217,6 +1217,32 @@
 
         }
 
+        /* Laptops have room for a taller banner. Its sizes grow with the screen's height. */
+
+        @media (min-width: 901px) and (min-height: 561px) and (max-height: 860px) {
+
+            .app-topbar {
+
+                row-gap: clamp(10px, 2vh, 14px);
+
+                padding: clamp(14px, 2.8vh, 20px) 24px;
+
+            }
+
+            /* The bigger portrait leaves less room, so long titles still fit on one line. */
+
+            .topbar-page-title h2 { font-size: clamp(17px, 1.75vw, 24px); }
+
+            .topbar-cm-frame { width: clamp(96px, 18vh, 112px); height: clamp(96px, 18vh, 112px); border-width: 4px; padding: 3px; }
+
+            .topbar-stat-card { padding: clamp(9px, 1.7vh, 12px) 13px; }
+
+            .topbar-stat-label { margin-bottom: 4px; }
+
+            .topbar-stat-value { font-size: clamp(17px, 1.6vw, 20px); }
+
+        }
+
         @media (min-width: 601px) and (max-height: 480px) {
 
             .topbar-cm-name,
