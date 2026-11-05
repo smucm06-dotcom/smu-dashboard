@@ -1,0 +1,33 @@
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+    @import 'tailwindcss';
+
+    @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+    @source '../../storage/framework/views/*.php';
+    @source '../**/*.blade.php';
+    @source '../**/*.js';
+
+    @theme {
+        --font-sans: 'Poppins', sans-serif;
+    }
+
+    :root {
+        --font-family-primary: 'Poppins', sans-serif;
+
+        --primary-green: #0B6046;
+        --dark-green: #0B4534;
+        --light-green: #EAF5EE;
+        --gold: #CAA24A;
+
+        --border-green: #D9E7DE;
+        --main-text: #173F32;
+        --muted-text: #687D73;
+    }
+
+    html,
+    body,
+    button,
+    input,
+    select,
+    textarea {
+        font-family: var(--font-family-primary);
+    }
