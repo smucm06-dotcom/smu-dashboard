@@ -1,10 +1,6 @@
 <aside class="app-sidebar" id="appSidebar">
     <div class="sidebar-brand">
-        <img src="{{ asset('images/logo.png') }}" alt="SMU Logo" class="sidebar-logo">
-        <div class="sidebar-brand-text">
-            <strong>SMU Dashboard</strong>
-            <span>Monitoring System</span>
-        </div>
+        <img src="{{ asset('images/sidebar-logo.png') }}" alt="Chief Minister's Special Monitoring Unit" class="sidebar-logo">
         <!-- Desktop: 260px sidebar <-> 68px icon rail. Mobile: close drawer. -->
         <button
             type="button"
