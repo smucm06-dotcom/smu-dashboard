@@ -31,8 +31,11 @@
 
     $numericTypes = ['number', 'change', 'percent', 'change_percent'];
 
+    // Pages whose name column is not "school_name" say which one it is.
+    $nameColumn ??= 'school_name';
+
     // Everything recorded for a visit, shown when its row is opened.
-    $visitDetail = static function ($visit) use ($detailFields, $detailDateFormat) {
+    $visitDetail = static function ($visit) use ($detailFields, $detailDateFormat, $nameColumn) {
         $fields = [];
 
         foreach ($detailFields as $column => $label) {
@@ -50,7 +53,7 @@
         }
 
         return [
-            'title' => $visit->school_name ?: 'EMIS '.$visit->emis_code,
+            'title' => $visit->{$nameColumn} ?: 'EMIS '.$visit->emis_code,
             'subtitle' => trim(($visit->district ?? '').' · '.$visit->visited_at->format('j M Y'), ' ·'),
             'fields' => $fields,
         ];

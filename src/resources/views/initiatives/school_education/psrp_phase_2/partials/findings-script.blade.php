@@ -404,10 +404,24 @@
   }
 
   /* Page */
+  /* The four cards in the banner, for what the filters select, counted as the figures below:
+     schools on the department's list, schools visited in the dates, and schools reported to
+     the department and answered, where their reply counts. */
+  function setCard(id, value) { var el = $(id); if (el) el.textContent = n(value); }
+  function hasReplyText(s) { return s.r.some(function (r) { return String(r.tx || '').trim() !== ''; }); }
+  function renderTopbar(list) {
+    var reported = list.filter(usesReply);
+    setCard('c-total', list.filter(function (s) { return s.b || s.pm; }).length);
+    setCard('c-visited', list.filter(inRange).length);
+    setCard('c-reports', reported.length);
+    setCard('c-replied', reported.filter(hasReplyText).length);
+  }
+
   function renderAll(fit) {
     var list = scoped(), o = summarise(list);
     $('scope').textContent = 'Everything below shows ' + (state.district || 'all districts') + ', ' + (fullRange() ? 'all dates' : rangeText());
     $('f-clear').hidden = !state.district && fullRange();
+    renderTopbar(list);
     if (META.minKey) { $('f-from').value = keyToISO(state.from); $('f-to').value = keyToISO(state.to); }
     renderVerify(o); renderIssues(o, list); renderReplies(o, list); renderDistricts(); renderLicensee(); renderMap(fit);
     if (state.sel) { var s = ALL.filter(function (x) { return x.e === state.sel; })[0]; if (s && state.district && s.d !== state.district) { state.sel = null; placeRing(null); renderHint(); } }

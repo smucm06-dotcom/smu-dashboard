@@ -372,10 +372,27 @@
   }
 
   /* Page */
+  /* The four cards in the banner, for what the filters select, counted as the figures below:
+     schools on the department's list, visits in the dates (a school visited twice counts twice),
+     and schools reported to the department and answered, where their reply counts. */
+  function setCard(id, value) { var el = $(id); if (el) el.textContent = n(value); }
+  function renderTopbar(list) {
+    var visits = 0;
+    ALL.forEach(function (s) {
+      if (!s.v || (state.district && s.d !== state.district)) return;
+      [s.v].concat(s.vv || []).forEach(function (v) { if (inRange(v.iso)) visits++; });
+    });
+    setCard('c-total', list.filter(function (s) { return !s.off; }).length);
+    setCard('c-visited', visits);
+    setCard('c-reports', list.filter(function (s) { return s.r; }).length);
+    setCard('c-replied', list.filter(function (s) { return s.r && String(s.r.tx || '').trim() !== ''; }).length);
+  }
+
   function renderAll(fit) {
     var list = scoped(), o = summarise(list);
     $('scope').textContent = scopeText();
     $('f-clear').hidden = !state.district && !hasDates();
+    renderTopbar(list);
     renderSummary(o);
     renderIssues(o, list);
     renderDistricts();

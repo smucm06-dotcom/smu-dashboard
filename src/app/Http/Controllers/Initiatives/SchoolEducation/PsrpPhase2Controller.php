@@ -7,11 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\Concerns\ManagesPsrpVisits;
 use App\Imports\Initiatives\SchoolEducation\PsrpPhase2Import;
 use App\Models\Initiative;
-use App\Models\InitiativeFile;
 use App\Models\Initiatives\SchoolEducation\PsrpPhase2;
+use App\Models\Initiatives\SchoolEducation\PsrpPhase2Response;
+use App\Models\Initiatives\SchoolEducation\PsrpPhase2School;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class PsrpPhase2Controller extends Controller
 {
@@ -141,7 +141,7 @@ class PsrpPhase2Controller extends Controller
 
         return response()
             ->view('initiatives.school_education.psrp_phase_2.show', $records + [
-                'topbar' => $this->topbar($initiative, $files),
+                'topbar' => $this->topbar($initiative),
                 'files' => $files,
             ])
             ->header('Vary', self::RECORDS_HEADER);
@@ -181,17 +181,23 @@ class PsrpPhase2Controller extends Controller
         return $this->uploadVisits($request, $initiative, $import);
     }
 
-    private function topbar(Initiative $initiative, Collection $files): array
+    // The four cards for everything on file. The page's script keeps them in step with the
+    // district and date filters, counting the same way as the figures below them.
+    private function topbar(Initiative $initiative): array
     {
+        // Replies count for schools the page knows: on the department's list or visited.
+        $known = PsrpPhase2School::query()->toBase()->select('emis_code')
+            ->union(PsrpPhase2::query()->toBase()->select('emis_code'));
+        $reported = PsrpPhase2Response::query()->toBase()->whereIn('emis_code', $known);
+
         return [
             'title' => $initiative->name,
             'description' => 'Monitor field inspection data and implementation progress for this initiative.',
             'stats' => [
-                // Files are newest first, so this is the department's latest list.
-                ['label' => 'Total Schools', 'value' => $files->get(InitiativeFile::TYPE_DEPARTMENT_LIST)?->first()?->row_count],
-                ['label' => 'Visited Schools', 'value' => PsrpPhase2::query()->distinct()->count('emis_code')],
-                ['label' => 'Reports Uploaded', 'value' => $files->get(InitiativeFile::TYPE_OUR_REPORT)?->count() ?? 0],
-                ['label' => 'Department Response', 'value' => $files->get(InitiativeFile::TYPE_DEPARTMENT_RESPONSE)?->count() ?? 0],
+                ['label' => 'Total Schools', 'value' => PsrpPhase2School::count(), 'id' => 'c-total'],
+                ['label' => 'Visited Schools', 'value' => PsrpPhase2::query()->distinct()->count('emis_code'), 'id' => 'c-visited'],
+                ['label' => 'Reports Sent to Department', 'value' => (clone $reported)->distinct()->count('emis_code'), 'id' => 'c-reports'],
+                ['label' => 'Department Responses', 'value' => (clone $reported)->whereRaw("TRIM(response) <> ''")->distinct()->count('emis_code'), 'id' => 'c-replied'],
             ],
         ];
     }
