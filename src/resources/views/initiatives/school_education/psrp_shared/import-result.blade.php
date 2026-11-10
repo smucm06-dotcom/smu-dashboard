@@ -95,6 +95,14 @@
                     </p>
                 @endif
 
+                @if (! empty($importResult['monthCorrections']))
+                    <p class="psrp-import-note">
+                        <strong>{{ $number(count($importResult['monthCorrections'])) }} visit dates had an impossible month,</strong>
+                        so the month was taken from the visits just before and after them:
+                        {{ implode('; ', array_map(fn ($fix) => "row {$fix['row']}, {$fix['from']} read as {$fix['to']}", $importResult['monthCorrections'])) }}.
+                    </p>
+                @endif
+
                 @if (($importResult['yearsCorrected'] ?? 0) > 0)
                     <p class="psrp-import-note">
                         <strong>{{ $number($importResult['yearsCorrected']) }} visit dates were before this phase began,</strong>
