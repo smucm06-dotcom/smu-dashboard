@@ -489,6 +489,23 @@
             overflow-wrap: anywhere;
         }
 
+        /* A line under a figure, on pages that send one. */
+        .topbar-stat-info {
+            display: block;
+            margin-top: 4px;
+            color: #C3E5D2;
+            font-size: 11px;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+
+        /* A card too narrow for its line keeps only its figure, so the banner stays short. */
+        .topbar-stat-card:has(.topbar-stat-info) { container: topbar-stat / inline-size; }
+
+        @container topbar-stat (max-width: 90px) {
+            .topbar-stat-info { display: none; }
+        }
+
         /* Chief Minister portrait - aligned right on desktop. */
         .topbar-right {
             grid-column: 2;
@@ -581,6 +598,7 @@
             .topbar-cm-frame { width: 170px; height: 170px; }
             .topbar-cm-name { font-size: 16px; }
             .topbar-stat-card { padding: 16px 18px; }
+            .topbar-stat-info { font-size: 12px; }
         }
 
         @media (max-width: 1100px) {
@@ -637,6 +655,8 @@
             .topbar-stat-card { padding: 6px; }
             .topbar-stat-label { margin-bottom: 2px; font-size: 8px; letter-spacing: 0; }
             .topbar-stat-value { font-size: 15px; }
+            /* No room for a line under each figure on a phone. */
+            .topbar-stat-info { display: none; }
         }
 
         @media (max-width: 360px) {
@@ -679,6 +699,7 @@
             .topbar-stat-card { padding: 6px 10px; }
             .topbar-stat-label { margin-bottom: 2px; }
             .topbar-stat-value { font-size: 16px; }
+            .topbar-stat-info { margin-top: 2px; font-size: 10.5px; line-height: 1.3; }
         }
 
         /* Laptops have room for a taller banner. Its sizes grow with the screen's height. */
@@ -696,9 +717,25 @@
             .topbar-stat-value { font-size: clamp(17px, 1.6vw, 20px); }
         }
 
+        /* Five cards with lines under them (Special Education) need the room the name takes
+           beside the portrait on smaller laptops, so the name goes under it there. */
+        @media (min-width: 901px) and (max-width: 1220px) and (max-height: 860px) {
+            .app-topbar:has(.topbar-stat-info) .topbar-right {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                text-align: center;
+            }
+
+            .app-topbar:has(.topbar-stat-info) .topbar-cm-name { margin: 0; font-size: 12px; }
+            .app-topbar:has(.topbar-stat-info) .topbar-cm-role { margin: 0; font-size: 10px; }
+        }
+
         @media (min-width: 601px) and (max-height: 480px) {
             .topbar-cm-name,
             .topbar-cm-role { display: none; }
+            /* Phones held sideways: the banner keeps only the figures. */
+            .topbar-stat-info { display: none; }
         }
 
         /* iPhones zoom the whole page when a focused field's text is under 16px. */

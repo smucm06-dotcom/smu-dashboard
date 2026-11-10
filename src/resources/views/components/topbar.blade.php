@@ -45,9 +45,14 @@
                         {{ $stat['label'] }}
                     </span>
 
-                    <strong class="topbar-stat-value">
+                    <strong class="topbar-stat-value" @isset($stat['id']) id="{{ $stat['id'] }}" @endisset>
                         {{ ($stat['value'] ?? null) === null ? '—' : number_format((float) $stat['value']) }}
                     </strong>
+
+                    {{-- Optional line under the figure. Only pages that send one show it. --}}
+                    @isset($stat['info'])
+                        <span class="topbar-stat-info" @isset($stat['id']) id="{{ $stat['id'] }}-sub" @endisset>{{ $stat['info'] }}</span>
+                    @endisset
 
                 </div>
             @endforeach

@@ -7,6 +7,7 @@ use App\Http\Controllers\InitiativeController;
 use App\Http\Controllers\InitiativeFileController;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase1Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase2Controller;
+use App\Http\Controllers\Initiatives\SpecialEducation\SpecialEducationInstitutesController;
 // Login routes
 Route::get('/', [AuthController::class, 'showLogin'])
     ->name('home');
@@ -64,6 +65,19 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/initiatives/{initiative}/psrp-phase-2/import', [PsrpPhase2Controller::class, 'import'])
     ->name('initiatives.psrp-phase-2.import');
+
+    // Special Education Institutes
+    Route::get('/initiatives/{initiative}/special-education-institutes/data', [SpecialEducationInstitutesController::class, 'data'])
+    ->name('initiatives.special-education-institutes.data');
+
+    Route::get('/initiatives/{initiative}/special-education-institutes/export', [SpecialEducationInstitutesController::class, 'export'])
+    ->name('initiatives.special-education-institutes.export');
+
+    Route::post('/initiatives/{initiative}/special-education-institutes/map-download', [SpecialEducationInstitutesController::class, 'mapDownload'])
+    ->name('initiatives.special-education-institutes.map-download');
+
+    Route::post('/initiatives/{initiative}/special-education-institutes/import', [SpecialEducationInstitutesController::class, 'import'])
+    ->name('initiatives.special-education-institutes.import');
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])

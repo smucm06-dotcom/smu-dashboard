@@ -185,6 +185,8 @@ trait ManagesPsrpVisits
                     // Real dates and numbers, so they can be sorted and added up in Excel.
                     $cells[] = match (true) {
                         $value !== null && $column['type'] === 'date' => Cell::fromValue(Carbon::parse($value), $dateStyles[$key] ??= new Style(format: $column['excel_format'])),
+                        // Saved as 71.4, shown in Excel as 71% like the visit file (Special Education).
+                        is_numeric($value) && $column['type'] === 'percent' => Cell::fromValue($value / 100, $dateStyles['%'] ??= new Style(format: '0%')),
                         is_numeric($value) && $column['type'] === 'number' => Cell::fromValue($value + 0),
                         default => Cell::fromValue($this->csvValue($value, $column)),
                     };
