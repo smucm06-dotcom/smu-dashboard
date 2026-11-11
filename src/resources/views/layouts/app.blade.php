@@ -684,18 +684,16 @@
             .topbar-page-title h2 { margin: 0; font-size: clamp(17px, 1.9vw, 24px); }
             .topbar-description { display: none; }
             .topbar-stats-grid { grid-column: 1; }
+            /* The name always sits under the portrait, as on every other screen. */
             .topbar-right {
                 grid-row: 1 / 3;
-                display: grid;
-                grid-template-columns: auto auto;
-                column-gap: 10px;
-                text-align: left;
+                gap: 4px;
                 transform: none;
             }
 
-            .topbar-cm-frame { grid-row: 1 / 3; width: 72px; height: 72px; border-width: 3px; padding: 2px; }
-            .topbar-cm-name { align-self: end; margin: 0; font-size: 13px; }
-            .topbar-cm-role { align-self: start; font-size: 11px; }
+            .topbar-cm-frame { width: 72px; height: 72px; border-width: 3px; padding: 2px; }
+            .topbar-cm-name { margin: 2px 0 0; font-size: 12px; white-space: nowrap; }
+            .topbar-cm-role { font-size: 10px; white-space: nowrap; }
             .topbar-stat-card { padding: 6px 10px; }
             .topbar-stat-label { margin-bottom: 2px; }
             .topbar-stat-value { font-size: 16px; }
@@ -711,24 +709,12 @@
 
             /* The bigger portrait leaves less room, so long titles still fit on one line. */
             .topbar-page-title h2 { font-size: clamp(17px, 1.75vw, 24px); }
-            .topbar-cm-frame { width: 130px; height: 130px; border-width: 4px; padding: 3px; }
+            /* The name under the portrait adds height, so the portrait grows with the screen's height
+               instead, keeping the banner close to its old height. */
+            .topbar-cm-frame { width: clamp(104px, 15vh, 130px); height: clamp(104px, 15vh, 130px); border-width: 4px; padding: 3px; }
             .topbar-stat-card { padding: clamp(9px, 1.7vh, 12px) 13px; }
             .topbar-stat-label { margin-bottom: 4px; }
             .topbar-stat-value { font-size: clamp(17px, 1.6vw, 20px); }
-        }
-
-        /* Five cards with lines under them (Special Education) need the room the name takes
-           beside the portrait on smaller laptops, so the name goes under it there. */
-        @media (min-width: 901px) and (max-width: 1220px) and (max-height: 860px) {
-            .app-topbar:has(.topbar-stat-info) .topbar-right {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                text-align: center;
-            }
-
-            .app-topbar:has(.topbar-stat-info) .topbar-cm-name { margin: 0; font-size: 12px; }
-            .app-topbar:has(.topbar-stat-info) .topbar-cm-role { margin: 0; font-size: 10px; }
         }
 
         @media (min-width: 601px) and (max-height: 480px) {
