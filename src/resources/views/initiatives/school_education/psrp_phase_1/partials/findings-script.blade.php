@@ -374,7 +374,8 @@
   /* Page */
   /* The four cards in the banner, for what the filters select, counted as the figures below:
      schools on the department's list, visits in the dates (a school visited twice counts twice),
-     and schools reported to the department and answered, where their reply counts. */
+     and schools answered by the department, where their reply counts. Reports Sent to Department
+     counts our uploaded report PDFs, which cover every district and date, so it is left as drawn. */
   function setCard(id, value) { var el = $(id); if (el) el.textContent = n(value); }
   function renderTopbar(list) {
     var visits = 0;
@@ -384,7 +385,6 @@
     });
     setCard('c-total', list.filter(function (s) { return !s.off; }).length);
     setCard('c-visited', visits);
-    setCard('c-reports', list.filter(function (s) { return s.r; }).length);
     setCard('c-replied', list.filter(function (s) { return s.r && String(s.r.tx || '').trim() !== ''; }).length);
   }
 
