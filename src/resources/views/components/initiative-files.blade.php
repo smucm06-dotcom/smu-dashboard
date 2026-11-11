@@ -54,9 +54,18 @@
             'listTitle' => 'Uploaded department responses',
             'empty' => 'No department responses have been uploaded yet.',
             'showEntries' => true,
+            'notes' => [
+                'A CSV or Excel file replaces the earlier one, so the page always compares against the latest file. The earlier file and its replies are deleted.',
+                'PDF letters from the department are kept beside it and replace nothing.',
+                'If the new file cannot be read, nothing changes.',
+            ],
             'deleteWarning' => 'Replies saved from it are removed from this page too.',
         ],
     ];
+
+    // The response file whose replies the page uses now. A new CSV or Excel file replaces it.
+    $currentResponse = $files->get($responseType, collect())
+        ->first(fn ($file) => strtolower(pathinfo($file->original_name, PATHINFO_EXTENSION)) !== 'pdf');
 
     $failedUpload = session('initiativeFileError');
     $failedType = $failedUpload['type'] ?? null;
@@ -120,6 +129,8 @@
             enctype="multipart/form-data"
             @if ($type === $listType && $currentList)
                 data-confirm="Replace &quot;{{ $currentList->original_name }}&quot; with the new file? The current list will be permanently deleted."
+            @elseif ($type === $responseType && $currentResponse)
+                data-confirm="A CSV or Excel file replaces &quot;{{ $currentResponse->original_name }}&quot;, and its replies will be permanently deleted. A PDF is only added. Continue?"
             @endif
         >
             @csrf

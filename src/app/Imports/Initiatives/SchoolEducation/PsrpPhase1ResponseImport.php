@@ -15,8 +15,13 @@ class PsrpPhase1ResponseImport implements InitiativeFileImport
 
     private const MAX_ROWS = 100000;
 
+    // Every column of the department's file: Sr, EMIS Code, District, SMU Visit Date,
+    // Analysis Report Remarks, PSPR-PEF Response Date, PSPR-PEF Response.
     private const COLUMNS = [
+        'source_sr' => ['sr', 'sr no', 's no', 'sno', 'serial', 'serial no'],
         'emis_code' => ['emis code', 'emis', 'emis no', 'emis number'],
+        'district' => ['district', 'district name'],
+        'visit_date' => ['smu visit date', 'visit date'],
         'sent_remarks' => ['analysis report remarks', 'report remarks', 'remarks'],
         'responded_at' => ['pspr pef response date', 'response date', 'reply date'],
         'response' => ['pspr pef response', 'department response', 'response', 'reply'],
@@ -37,17 +42,22 @@ class PsrpPhase1ResponseImport implements InitiativeFileImport
 
         foreach ($sheet['rows'] as $row) {
             $emis = $this->emisCode($row['emis_code'] ?? null);
-            $response = $this->cleanText($row['response'] ?? null);
 
-            if ($emis === null || $response === null) {
+            // A row with no EMIS code, such as a title or a blank line, is not a reply.
+            if ($emis === null) {
                 continue;
             }
 
+            // Every column is saved. A blank reply is kept too, as on Phase 2; the page leaves
+            // it out of the figures, as before.
             $rows[] = [
+                'source_sr' => is_numeric($row['source_sr'] ?? null) && (float) $row['source_sr'] >= 0 ? (int) $row['source_sr'] : null,
                 'emis_code' => self::EMIS_CORRECTIONS[$emis] ?? $emis,
+                'district' => $this->cleanText($row['district'] ?? null, 100),
+                'visit_date' => $this->date($row['visit_date'] ?? null),
                 'sent_remarks' => $this->cleanText($row['sent_remarks'] ?? null),
                 'responded_at' => $this->date($row['responded_at'] ?? null),
-                'response' => $response,
+                'response' => $this->cleanText($row['response'] ?? null) ?? '',
             ];
         }
 

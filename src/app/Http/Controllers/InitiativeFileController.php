@@ -9,6 +9,7 @@ use App\Models\InitiativeFile;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -66,14 +67,23 @@ class InitiativeFileController extends Controller
         }
 
         $file = null;
+        $olderResponses = collect();
 
         try {
-            DB::transaction(function () use ($initiative, $upload, $type, $entries, $import, $prepared, &$file) {
+            DB::transaction(function () use ($initiative, $upload, $type, $entries, $import, $prepared, &$file, &$olderResponses) {
                 $file = InitiativeFile::storeUpload($initiative, $upload, $type, [
                     'row_count' => $entries['count'],
                 ]);
 
                 $import?->save($prepared, $file);
+
+                // A department response file with replies takes the place of the earlier ones,
+                // so the page always compares against the latest file only. Their replies go with
+                // them. Done in the same transaction, so a failed upload keeps them as they were.
+                if ($type === InitiativeFile::TYPE_DEPARTMENT_RESPONSE && $import !== null) {
+                    $olderResponses = $this->olderResponseFiles($initiative, $file);
+                    $olderResponses->each->delete();
+                }
             });
         } catch (Throwable $e) {
             report($e);
@@ -85,9 +95,14 @@ class InitiativeFileController extends Controller
             return $this->failed($initiative, $type, 'The file could not be saved. Please try again.');
         }
 
-        $replaced = $type === InitiativeFile::TYPE_DEPARTMENT_LIST
-            ? $this->removeOlderLists($initiative, $file)
-            : [];
+        $replaced = match ($type) {
+            InitiativeFile::TYPE_DEPARTMENT_LIST => $this->removeOlderLists($initiative, $file),
+            InitiativeFile::TYPE_DEPARTMENT_RESPONSE => $olderResponses
+                ->each(fn (InitiativeFile $older) => $this->forgetStoredFile($older))
+                ->pluck('original_name')
+                ->all(),
+            default => [],
+        };
 
         return redirect()
             ->to(route('initiatives.show', $initiative).'#initiative-files')
@@ -153,10 +168,27 @@ class InitiativeFileController extends Controller
         return $removed;
     }
 
+    // Earlier department response files that hold replies (CSV or Excel). The department's PDF
+    // letters hold no rows, so they are kept and never replace anything.
+    private function olderResponseFiles(Initiative $initiative, InitiativeFile $newest): Collection
+    {
+        return $initiative->files()
+            ->where('type', InitiativeFile::TYPE_DEPARTMENT_RESPONSE)
+            ->where('id', '<', $newest->id)
+            ->get()
+            ->reject(fn (InitiativeFile $file) => strtolower(pathinfo($file->original_name, PATHINFO_EXTENSION)) === 'pdf')
+            ->values();
+    }
+
     private function remove(InitiativeFile $file): void
     {
         $file->delete();
+        $this->forgetStoredFile($file);
+    }
 
+    // Removes a deleted file record's stored copy and keeps a record of the deletion.
+    private function forgetStoredFile(InitiativeFile $file): void
+    {
         // The record goes first: a leftover file is harmless, a record with no file is not.
         if (! Storage::disk('local')->delete($file->stored_path)) {
             Log::warning('Deleted initiative file could not be removed from storage.', ['path' => $file->stored_path]);

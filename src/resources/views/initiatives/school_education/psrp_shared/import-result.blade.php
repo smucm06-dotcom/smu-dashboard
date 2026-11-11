@@ -88,32 +88,37 @@
                     </p>
                 @endif
 
+                {{-- One and several read differently: "1 visit date was", "3 visit dates were". --}}
                 @if (($importResult['datesCorrected'] ?? 0) > 0)
+                    @php $count = $importResult['datesCorrected']; @endphp
                     <p class="psrp-import-note">
-                        <strong>{{ $number($importResult['datesCorrected']) }} visit dates were in the future,</strong>
-                        so their day and month were swapped.
+                        <strong>{{ $number($count) }} {{ $count === 1 ? 'visit date was' : 'visit dates were' }} in the future,</strong>
+                        so {{ $count === 1 ? 'its' : 'their' }} day and month were swapped.
                     </p>
                 @endif
 
                 @if (! empty($importResult['monthCorrections']))
+                    @php $count = count($importResult['monthCorrections']); @endphp
                     <p class="psrp-import-note">
-                        <strong>{{ $number(count($importResult['monthCorrections'])) }} visit dates had an impossible month,</strong>
-                        so the month was taken from the visits just before and after them:
+                        <strong>{{ $number($count) }} {{ $count === 1 ? 'visit date had' : 'visit dates had' }} an impossible month,</strong>
+                        so the month was taken from the visits just before and after {{ $count === 1 ? 'it' : 'them' }}:
                         {{ implode('; ', array_map(fn ($fix) => "row {$fix['row']}, {$fix['from']} read as {$fix['to']}", $importResult['monthCorrections'])) }}.
                     </p>
                 @endif
 
                 @if (($importResult['yearsCorrected'] ?? 0) > 0)
+                    @php $count = $importResult['yearsCorrected']; @endphp
                     <p class="psrp-import-note">
-                        <strong>{{ $number($importResult['yearsCorrected']) }} visit dates were before this phase began,</strong>
-                        so their year was corrected.
+                        <strong>{{ $number($count) }} {{ $count === 1 ? 'visit date was' : 'visit dates were' }} before this phase began,</strong>
+                        so {{ $count === 1 ? 'its' : 'their' }} year was corrected.
                     </p>
                 @endif
 
                 @if (($importResult['coordinatesIgnored'] ?? 0) > 0)
+                    @php $count = $importResult['coordinatesIgnored']; @endphp
                     <p class="psrp-import-note">
-                        <strong>{{ $number($importResult['coordinatesIgnored']) }} coordinates could not be used,</strong>
-                        so they were left blank.
+                        <strong>{{ $number($count) }} {{ $count === 1 ? 'coordinate' : 'coordinates' }} could not be used,</strong>
+                        so {{ $count === 1 ? 'it was' : 'they were' }} left blank.
                     </p>
                 @endif
 

@@ -405,15 +405,15 @@
 
   /* Page */
   /* The four cards in the banner, for what the filters select, counted as the figures below:
-     schools on the department's list, schools visited in the dates, and schools reported to
-     the department and answered, where their reply counts. */
+     schools on the department's list, schools visited in the dates, and schools answered by the
+     department, where their reply counts. Reports Sent to Department counts our uploaded report
+     PDFs, which cover every district and date, so it is left as drawn. */
   function setCard(id, value) { var el = $(id); if (el) el.textContent = n(value); }
   function hasReplyText(s) { return s.r.some(function (r) { return String(r.tx || '').trim() !== ''; }); }
   function renderTopbar(list) {
     var reported = list.filter(usesReply);
     setCard('c-total', list.filter(function (s) { return s.b || s.pm; }).length);
     setCard('c-visited', list.filter(inRange).length);
-    setCard('c-reports', reported.length);
     setCard('c-replied', reported.filter(hasReplyText).length);
   }
 

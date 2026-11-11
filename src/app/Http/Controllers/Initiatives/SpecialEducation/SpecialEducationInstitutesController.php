@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\Concerns\ManagesPsrpVisits;
 use App\Imports\Initiatives\SpecialEducation\SpecialEducationVisitImport;
 use App\Models\Initiative;
+use App\Models\InitiativeFile;
 use App\Models\Initiatives\SpecialEducation\SpecialEducationInstitute;
 use App\Models\Initiatives\SpecialEducation\SpecialEducationVisit;
 use Illuminate\Database\Eloquent\Builder;
@@ -250,6 +251,11 @@ class SpecialEducationInstitutesController extends Controller
     private function topbar(Initiative $initiative, SpecialEducationDashboard $dashboard): array
     {
         $cards = $dashboard->headline($dashboard->data());
+
+        // Our report PDFs, uploaded with "Upload report", as on every initiative page. A file
+        // covers every district and date, so this one stays the same whatever the filters select.
+        $cards['reports'] = [$initiative->files()->where('type', InitiativeFile::TYPE_OUR_REPORT)->count(), null];
+
         $labels = [
             'total' => 'Total schools',
             'visited' => 'Visited by SMU',
