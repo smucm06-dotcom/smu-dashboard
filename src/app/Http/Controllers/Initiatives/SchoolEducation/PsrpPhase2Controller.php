@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\Concerns\ManagesPsrpVisits;
 use App\Imports\Initiatives\SchoolEducation\PsrpPhase2Import;
 use App\Models\Initiative;
+use App\Models\InitiativeFile;
 use App\Models\Initiatives\SchoolEducation\PsrpPhase2;
 use App\Models\Initiatives\SchoolEducation\PsrpPhase2Response;
 use App\Models\Initiatives\SchoolEducation\PsrpPhase2School;
@@ -196,7 +197,9 @@ class PsrpPhase2Controller extends Controller
             'stats' => [
                 ['label' => 'Total Schools', 'value' => PsrpPhase2School::count(), 'id' => 'c-total'],
                 ['label' => 'Visited Schools', 'value' => PsrpPhase2::query()->distinct()->count('emis_code'), 'id' => 'c-visited'],
-                ['label' => 'Reports Sent to Department', 'value' => (clone $reported)->distinct()->count('emis_code'), 'id' => 'c-reports'],
+                // Our report PDFs, uploaded with "Upload report". A file covers every district and date,
+                // so this one stays the same whatever the filters select.
+                ['label' => 'Reports Sent to Department', 'value' => $initiative->files()->where('type', InitiativeFile::TYPE_OUR_REPORT)->count(), 'id' => 'c-reports'],
                 ['label' => 'Department Responses', 'value' => (clone $reported)->whereRaw("TRIM(response) <> ''")->distinct()->count('emis_code'), 'id' => 'c-replied'],
             ],
         ];

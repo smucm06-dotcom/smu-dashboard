@@ -13,6 +13,8 @@ class PsrpPhase1Response extends Model
     protected function casts(): array
     {
         return [
+            'source_sr' => 'integer',
+            'visit_date' => 'date',
             'responded_at' => 'date',
         ];
     }

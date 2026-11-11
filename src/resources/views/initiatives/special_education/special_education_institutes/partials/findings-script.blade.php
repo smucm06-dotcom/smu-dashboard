@@ -207,7 +207,6 @@
   function renderFlow(o, rv) {
     setCard('c-total', o.total);
     setCard('c-visited', o.visited, o.visited ? pct(o.visited, o.total) + '% of total schools, ' + pl(o.visits, 'visit', 'visits') + ' from ' + ml(o.first) + ' to ' + ml(o.last) : 'None yet');
-    setCard('c-reports', o.reports, o.reports ? 'Covering ' + pl(o.reported, 'school', 'schools') + (o.repMin ? ', ' + ml(o.repMin) + ' to ' + ml(o.repMax) : '') : 'None in this selection');
     setCard('c-replied', o.replied, o.reports ? (o.lag !== null ? 'Usually within ' + pl(o.lag, 'day', 'days') + '. ' : '') + n(o.noReply) + ' with no response' : '');
     setCard('c-revisit', rv.n, rv.n ? 'Checked again ' + (rv.gMin === rv.gMax ? rv.gMin : rv.gMin + ' to ' + rv.gMax) + ' months later' : 'None in this selection');
   }

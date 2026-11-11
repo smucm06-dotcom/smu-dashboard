@@ -19,10 +19,18 @@ return new class extends Migration
                 ->on('initiative_files')
                 ->cascadeOnDelete();
 
+            // Excel: Sr, EMIS Code, District, SMU Visit Date, Analysis Report Remarks,
+            // PSPR-PEF Response Date, PSPR-PEF Response. Every column is kept.
+            $table->unsignedInteger('source_sr')->nullable();
             $table->string('emis_code', 20);
-            $table->text('sent_remarks')->nullable();
+            // As written in the file.
+            $table->string('district', 100)->nullable();
+            $table->date('visit_date')->nullable();
+            // Remarks and replies run long; these hold the longest an Excel cell can be.
+            $table->mediumText('sent_remarks')->nullable();
             $table->date('responded_at')->nullable();
-            $table->text('response');
+            // Empty when the department left the reply blank.
+            $table->mediumText('response');
 
             $table->timestamps();
 

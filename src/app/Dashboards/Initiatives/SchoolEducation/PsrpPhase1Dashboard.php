@@ -35,7 +35,8 @@ class PsrpPhase1Dashboard
     {
         $list = PsrpPhase1School::query()->toBase()->get()->keyBy('emis_code');
         $visits = PsrpPhase1::query()->toBase()->orderBy('visited_at')->orderBy('id')->get()->groupBy('emis_code');
-        $replies = PsrpPhase1Response::query()->toBase()->orderBy('id')->get()->groupBy('emis_code');
+        // A blank reply is saved but says nothing, so the findings leave it out, as before.
+        $replies = PsrpPhase1Response::query()->toBase()->whereRaw("TRIM(response) <> ''")->orderBy('id')->get()->groupBy('emis_code');
 
         $schools = [];
 
