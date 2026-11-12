@@ -80,7 +80,6 @@
 .psrp-findings .chg { display: flex; align-items: center; gap: 10px; }
 .psrp-findings .chg .stack { flex: 1; min-width: 120px; }
 .psrp-findings .chg span { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; min-width: 92px; }
-.psrp-findings .said { font-size: 13px; color: var(--ink-2); max-width: 48ch; }
 .psrp-findings details.more-d > summary { cursor: pointer; color: var(--accent); font-weight: 700; padding: 14px 18px; }
 .psrp-findings details.more-d > p { padding: 0 18px 10px; }
 .psrp-findings .rv-list button { align-items: center; }
@@ -121,23 +120,7 @@
 /* Sources line at the end of the page */
 .psrp-findings.spe-sources { color: var(--muted); font-size: 13px; padding: 18px 0 36px; margin-top: 26px; border-top: 1px solid var(--line); }
 
-/* The filter bar looks and lines up as on the PSRP pages. To keep the section links on the
-   same line as the four filters, what the page shows gives way first: it is cut short with
-   "…" (hover shows it all), then left out. Only then do the links move to a second line,
-   as they do on the PSRP pages. */
-.psrp-findings.filterbar .fb-meta { flex: 1 1 var(--spe-nav-text, 420px); flex-wrap: nowrap; }
-/* Phones have no links in the bar (as on the PSRP pages), so there the text always shows. */
-@container psrp (min-width: 721px) {
-  .psrp-findings.filterbar .fb-meta { container: speFilterMeta / inline-size; }
-}
-.psrp-findings.filterbar .scope { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.psrp-findings.filterbar .nav { flex: none; flex-wrap: nowrap; white-space: nowrap; }
-/* The links keep the PSRP spacing where there is room and close up a little where there isn't,
-   such as when "Clear filters" shows. --spe-nav-text is the links' text and gaps, set by the script. */
-.psrp-findings.filterbar .nav a { padding-left: clamp(0px, calc((100cqi - var(--spe-nav-text, 420px)) / 12), 10px); padding-right: clamp(0px, calc((100cqi - var(--spe-nav-text, 420px)) / 12), 10px); }
-@container speFilterMeta (max-width: 600px) {
-  .psrp-findings.filterbar .scope { display: none; }
-}
+/* The one-row filter bar (filters and section links together) is in the shared findings styles. */
 
 /* Four filters wrap to three or four rows here, which would cover too much of the screen
    under the taller banner if they stayed on it. */

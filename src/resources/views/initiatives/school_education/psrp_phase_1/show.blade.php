@@ -19,6 +19,11 @@
         </a>
         <i data-lucide="chevron-right" aria-hidden="true"></i>
         <span aria-current="page">{{ $initiative->name }}</span>
+        {{-- The page as it is on the screen, as a PDF download (see psrp_shared/pdf-export) --}}
+        <button type="button" class="psrp-pdf-btn" id="pdfExport" data-pdf-skip data-pdf-name="{{ $initiative->name }}">
+            <i data-lucide="file-down" aria-hidden="true"></i>
+            <span>Export to PDF</span>
+        </button>
     </nav>
 
     {{-- Filters: these apply to the whole page --}}
@@ -164,4 +169,5 @@
 <script src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
 @include('initiatives.school_education.psrp_phase_1.partials.findings-script')
 @include('initiatives.school_education.psrp_shared.records-script')
+@include('initiatives.school_education.psrp_shared.pdf-export')
 @endpush

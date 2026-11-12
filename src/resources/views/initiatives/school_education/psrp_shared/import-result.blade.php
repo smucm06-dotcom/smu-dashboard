@@ -106,14 +106,6 @@
                     </p>
                 @endif
 
-                @if (($importResult['yearsCorrected'] ?? 0) > 0)
-                    @php $count = $importResult['yearsCorrected']; @endphp
-                    <p class="psrp-import-note">
-                        <strong>{{ $number($count) }} {{ $count === 1 ? 'visit date was' : 'visit dates were' }} before this phase began,</strong>
-                        so {{ $count === 1 ? 'its' : 'their' }} year was corrected.
-                    </p>
-                @endif
-
                 @if (($importResult['coordinatesIgnored'] ?? 0) > 0)
                     @php $count = $importResult['coordinatesIgnored']; @endphp
                     <p class="psrp-import-note">

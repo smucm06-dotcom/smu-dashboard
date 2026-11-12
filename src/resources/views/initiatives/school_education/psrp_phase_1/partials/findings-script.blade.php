@@ -22,6 +22,34 @@
     { id: 'wall', label: 'No boundary wall' }
   ];
   var ISSUE = {}; ISSUES.forEach(function (i) { ISSUE[i.id] = i; });
+
+  // A sharp, lasting fall in "Dilapidated" ratings part way through the visits, found from the
+  // visits themselves: the month where the share drops the most, when the earlier share is at
+  // least 15%, the later one a third of that or less, and each side has 20 or more ratings.
+  // Null when the visits show no such fall, so the note and its marks only show when it is true.
+  var dilShift = null;
+  function ratingShift(visits, fields) {
+    var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], by = {};
+    visits.forEach(function (v) {
+      var b = by[String(v.k).slice(0, 6)] = by[String(v.k).slice(0, 6)] || {};
+      fields.forEach(function (f) { if (!v[f]) return; var c = b[f] = b[f] || [0, 0]; c[1]++; if (v[f] === 'Dilapidated') c[0]++; });
+    });
+    var months = Object.keys(by).sort(), best = null;
+    for (var i = 1; i < months.length; i++) {
+      var side = { e: {}, l: {} }, tot = { e: [0, 0], l: [0, 0] };
+      months.forEach(function (m, j) {
+        var s = j < i ? 'e' : 'l';
+        fields.forEach(function (f) { var c = by[m][f] || [0, 0], t = side[s][f] = side[s][f] || [0, 0]; t[0] += c[0]; t[1] += c[1]; tot[s][0] += c[0]; tot[s][1] += c[1]; });
+      });
+      if (tot.e[1] < 20 || tot.l[1] < 20) continue;
+      var e = tot.e[0] / tot.e[1], l = tot.l[0] / tot.l[1];
+      if (!best || e - l > best.e - best.l) best = { e: e, l: l, i: i, side: side };
+    }
+    if (!best || best.e < 0.15 || best.l > best.e / 3) return null;
+    var label = function (m) { return MONTHS[Number(m.slice(4, 6)) - 1] + ' ' + m.slice(0, 4); };
+    var share = function (c) { return c && c[1] ? Math.round(c[0] / c[1] * 100) + '%' : '–'; };
+    return { upTo: label(months[best.i - 1]), from: label(months[best.i]), early: function (f) { return share(best.side.e[f]); }, late: function (f) { return share(best.side.l[f]); } };
+  }
   var HIGHLIGHT = ['danger', 'water', 'salary', 'teach', 'fees'];
   var OUTCOMES = [
     { id: 'penalty', label: 'Penalty imposed', sub: 'The operator was penalised', badge: 'b-crit' },
@@ -85,6 +113,15 @@
       : state.from ? ', visits from ' + longDate(state.from) + ' onwards'
       : state.to ? ', visits up to ' + longDate(state.to) : '';
     return 'Everything below shows ' + (state.district ? state.district + ' only' : 'all districts') + dates;
+  }
+
+  // What the page shows, in the filter bar. Where the one-row bar has no room for the whole
+  // sentence it is said more briefly, and hovering always shows all of it.
+  function fitScope() {
+    var el = $('scope'), text = scopeText();
+    el.textContent = text;
+    el.title = text;
+    if (el.clientWidth && el.scrollWidth > el.clientWidth + 1) el.textContent = text.replace(/^Everything below shows /, 'Showing ');
   }
 
   /* Summary */
@@ -166,6 +203,7 @@
     $('mapsec').scrollIntoView();
   }
   function renderIssues(o, list) {
+    dilShift = ratingShift(list.filter(function (s) { return s.v; }).map(function (s) { return { k: s.v.iso.replace(/-/g, ''), cc: s.v.cc, wc: s.v.wc }; }), ['cc', 'wc']);
     $('tiles').innerHTML = HIGHLIGHT.map(function (id) {
       var i = ISSUE[id];
       return '<button type="button" class="tile" data-issue="' + id + '"><b>' + n(o.count[id]) + '</b><span>' + esc(i.label) + '</span><small>' + esc(i.why) + ' &middot; ' + pct(o.count[id], o.visited) + '% of visited</small></button>';
@@ -174,9 +212,9 @@
     var max = Math.max.apply(null, ranked.map(function (i) { return o.count[i.id]; }).concat([1]));
     $('irows').innerHTML = '<div class="irow irow-h"><span>Issue</span><span class="hb"></span><span class="num">Schools</span><span class="num">Penalties</span></div>' + ranked.map(function (i) {
       var c = o.count[i.id];
-      return '<button type="button" class="irow" data-issue="' + i.id + '"><span>' + esc(i.label) + (i.flag ? ' <span class="flag" title="See the note below">*</span>' : '') + '</span><span class="bar"><i style="width:' + (c / max * 100) + '%"></i></span><span class="num">' + n(c) + ' <span class="pct">' + pct(c, o.visited) + '%</span></span><span class="num">' + (o.pen[i.id] ? n(o.pen[i.id]) : '<span class="pct">&ndash;</span>') + '</span></button>';
+      return '<button type="button" class="irow" data-issue="' + i.id + '"><span>' + esc(i.label) + (i.flag && dilShift ? ' <span class="flag" title="See the note below">*</span>' : '') + '</span><span class="bar"><i style="width:' + (c / max * 100) + '%"></i></span><span class="num">' + n(c) + ' <span class="pct">' + pct(c, o.visited) + '%</span></span><span class="num">' + (o.pen[i.id] ? n(o.pen[i.id]) : '<span class="pct">&ndash;</span>') + '</span></button>';
     }).join('');
-    var notes = '<p class="note"><span class="flag">*</span> Check before relying on these two. Visits before March 2025 rated most classrooms and washrooms "Dilapidated", and later visits almost never did. Different schools were visited in each period, so this looks like a change in how the form was filled, not an improvement. Leaving those ratings out, issues appear at ' + n(o.withoutDil) + ' schools instead of ' + n(o.withIssues) + '.</p>';
+    var notes = dilShift ? '<p class="note"><span class="flag">*</span> Check before relying on these two. Visits up to ' + dilShift.upTo + ' rated ' + dilShift.early('cc') + ' of classrooms and ' + dilShift.early('wc') + ' of washrooms "Dilapidated"; from ' + dilShift.from + ' the share was ' + dilShift.late('cc') + ' and ' + dilShift.late('wc') + '. Different schools were visited in each period, so this may be a change in how the form was filled, not an improvement. Leaving those ratings out, issues appear at ' + n(o.withoutDil) + ' schools instead of ' + n(o.withIssues) + '.</p>' : '';
     if (o.sed) notes += '<p class="note">For ' + pl(o.sed, 'school', 'schools') + ', the department said the boundary wall is the School Education Department\'s responsibility, not the operator\'s.</p>';
     $('inotes').innerHTML = notes;
     var top = list.filter(function (s) { return iss(s).length; }).sort(function (a, b) { return iss(b).length - iss(a).length || a.n.localeCompare(b.n); }).slice(0, 10);
@@ -218,7 +256,7 @@
         '<td><button type="button" class="dname" data-district="' + esc(r.d) + '">' + esc(r.d) + '</button></td><td class="r">' + n(r.total) + '</td><td class="r">' + n(r.visited) + '</td>' +
         '<td><div class="cov"><div class="bar"><i style="width:' + r.cov * 100 + '%"></i></div><span>' + Math.round(r.cov * 100) + '%</span></div></td>' +
         '<td class="r">' + (r.visited ? Math.round(r.rate * 100) + '%' : '&ndash;') + '</td><td class="r">' + (r.visited ? r.per.toFixed(1) : '&ndash;') + '</td>' +
-        '<td>' + esc(r.top) + (r.top && ISSUE_FLAG[r.top] ? ' <span class="flag">*</span>' : '') + '</td><td class="r">' + n(r.replied) + '</td><td class="r">' + n(r.pen) + '</td></tr>';
+        '<td>' + esc(r.top) + (r.top && ISSUE_FLAG[r.top] && dilShift ? ' <span class="flag">*</span>' : '') + '</td><td class="r">' + n(r.replied) + '</td><td class="r">' + n(r.pen) + '</td></tr>';
     }).join('') + '</tbody>';
     var big = DROWS.filter(function (r) { return r.total >= 30; });
     var minCov = big.slice().sort(function (a, b) { return a.cov - b.cov; }).slice(0, 3);
@@ -241,7 +279,7 @@
   var C = { good: css.getPropertyValue('--good').trim(), crit: css.getPropertyValue('--crit').trim(), surf: css.getPropertyValue('--surface').trim(), ink: css.getPropertyValue('--ink').trim() };
   var renderer = L.canvas({ padding: 0.3, tolerance: 5 });
   var pins = L.layerGroup().addTo(map), markers = {};
-  var ring = null;
+  var ring = null, focusPin = null;
   var PUNJAB = [[27.7, 69.3], [34.1, 75.5]];
   function radius() { var z = map.getZoom() || 7; return z < 7 ? 2.5 : z < 8 ? 3 : z < 10 ? 4 : z < 12 ? 5.5 : 7; }
   function makeMarker(s) {
@@ -288,11 +326,15 @@
       if (zone.length && (state.district || state.issue)) map.fitBounds(L.latLngBounds(zone).pad(0.08), { maxZoom: 12 });
       else map.fitBounds(PUNJAB);
     }
+    if (state.sel) placeRing(BY_EMIS[state.sel] || null);
   }
-  map.on('zoomend', function () { var r = radius(); Object.keys(markers).forEach(function (k) { markers[k].setRadius(r); }); });
+  map.on('zoomend', function () { var r = radius(); Object.keys(markers).forEach(function (k) { markers[k].setRadius(r); }); if (focusPin) focusPin.setRadius(r); });
+  // The school opened always shows inside its ring, even when the map's choices hide its pin.
   function placeRing(s) {
     if (ring) { map.removeLayer(ring); ring = null; }
+    if (focusPin) { map.removeLayer(focusPin); focusPin = null; }
     if (s && s.la !== undefined) {
+      if (!markers[s.e] || !pins.hasLayer(markers[s.e])) focusPin = makeMarker(s).addTo(map);
       ring = L.circleMarker([s.la, s.lo], { radius: 12, color: C.ink, weight: 2.5, fill: false, interactive: false, renderer: renderer }).addTo(map);
     }
   }
@@ -390,7 +432,7 @@
 
   function renderAll(fit) {
     var list = scoped(), o = summarise(list);
-    $('scope').textContent = scopeText();
+    fitScope();
     $('f-clear').hidden = !state.district && !hasDates();
     renderTopbar(list);
     renderSummary(o);
@@ -447,7 +489,7 @@
     var t = e.target.closest('[data-issue]');
     if (t) { selectIssue(t.dataset.issue); return; }
     t = e.target.closest('[data-open]');
-    if (t) { openById(t.dataset.open); $('mapsec').scrollIntoView(); return; }
+    if (t) { openById(t.dataset.open); $('map').scrollIntoView({ block: 'center' }); return; }
     t = e.target.closest('[data-sort]');
     if (t) {
       var k = t.dataset.sort;
@@ -477,9 +519,19 @@
   // Section links must land below the banner and filter bar, whatever their height on this screen.
   var bar = document.querySelector('.filterbar');
   var banner = document.querySelector('.app-topbar');
+  var links = bar.querySelector('.nav');
+  // The links stay beside the filters while their text and gaps fit (see the shared filter bar styles).
+  function measureLinks() {
+    if (!links || !links.offsetWidth) return;
+    var list = links.querySelectorAll('a'), total = (parseFloat(getComputedStyle(links).columnGap) || 0) * (list.length - 1);
+    list.forEach(function (a) { var r = document.createRange(); r.selectNodeContents(a); total += r.getBoundingClientRect().width; });
+    $('psrpFilters').style.setProperty('--nav-text', Math.ceil(total) + 2 + 'px');
+  }
   function setScrollOffset() {
+    measureLinks();
     var sticky = getComputedStyle(bar).position === 'sticky';
     document.documentElement.style.scrollPaddingTop = (banner.offsetHeight + (sticky ? bar.offsetHeight : 0) + 12) + 'px';
+    fitScope();
   }
   setScrollOffset();
   var offsetWatcher = new ResizeObserver(setScrollOffset);
@@ -533,7 +585,7 @@
   }
 
   map.fitBounds(PUNJAB);
-  $('scope').textContent = scopeText();
+  fitScope();
   $('f-clear').hidden = !state.district && !hasDates();
   renderHint();
   load();

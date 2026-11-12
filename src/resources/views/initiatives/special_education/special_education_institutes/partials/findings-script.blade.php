@@ -54,46 +54,14 @@
     { k: 'sep', label: 'Separate classroom for each grade', vn: 'separate classrooms', ok: function (v) { return v.sep; } },
     { k: 'fee', label: 'No fee charged', vn: 'free schooling', ok: function (v) { return v.fee === null || v.fee === undefined ? null : 1 - v.fee; } }
   ];
-  var ROUNDS = [
-    { label: 'Apr to May 2025', from: '2025-04-01', to: '2025-05-31' },
-    { label: 'Sep 2025 to May 2026', from: '2025-06-01', to: '2026-06-30' },
-    { label: 'Aug to Sep 2026', from: '2026-07-01', to: '2026-12-31' }
-  ];
-  var PROM = [
-    { label: 'Stipend being received', said: 'April 2025: the delay "got resolved" and the last quarter\'s stipend would be paid by 30 April 2025.', ok: function (v) { return v.sti; } },
-    { label: 'Teachers present', said: 'Facial attendance app means "no chance of proxy or willful absence".', rate: ['tp', 'tt'] },
-    { label: 'Washrooms clean', said: 'District officers told to visit and upload geo-tagged photos; SMU complaints "got resolved".', ok: clean('wc') },
-    { label: 'Free books and uniform given', said: 'Textbooks handed to district offices; remaining uniforms after a quality check.', ok: kit },
-    { label: 'First aid available', said: 'Divisional offices told to keep first aid kits in schools and vehicles.', ok: function (v) { return v.fa; } },
-    { label: 'Clean drinking water', said: 'Field offices told to make sure clean water and electricity are available.', ok: function (v) { return v.wa; } }
-  ];
-
-  var ACTS = [
-    { g: 'case', rx: /suspended/i, t: 'Officers suspended after students were beaten', s: 'SMU reported it; the department also sent a circular against physical punishment to all field offices.' },
-    { g: 'case', rx: /complaints? (by smu )?got resolved/i, t: 'Cleanliness complaints said to be resolved', s: 'The response says the specific complaints SMU pointed out were resolved.' },
-    { g: 'case', rx: /incident/i, t: 'Fee complaints inquired', s: 'Heads and district officers denied charging fees; the department asked SMU to share evidence.' },
-    { g: 'case', rx: /sought report from concerned head|inquired the matter from the concerned/i, t: 'Reports sought from school heads', s: 'For example, heads said there is no budget for sports or vocational kit.' },
-    { g: 'dir', rx: /online|virtual session/i, t: 'Online meetings with all district education officers', s: 'On cleanliness; officers to visit and upload geo-tagged photos in the new monitoring app.' },
-    { g: 'dir', rx: /pick ?(and|&) ?drop|pipick/i, t: 'Keep pick and drop running', s: 'Field offices told to settle fuel and vehicle repair budgets.' },
-    { g: 'dir', rx: /divis\w* ?head/i, t: 'Settle stipend, uniform and transport budgets', s: 'Divisional offices told to work this out with district education authorities.' },
-    { g: 'dir', rx: /ensure cleanliness within/i, t: 'Keep premises clean and fill Class-IV posts', s: 'District and SESI inspection reports to be checked daily (January 2026 response).' },
-    { g: 'dir', rx: /re-align/i, t: 'Bus routes to be re-aligned', s: 'DGSE letter of 18 April 2025, to reduce complaints about routes.' },
-    { g: 'dir', rx: /first aid kit|ba\w*sc facilities/i, t: 'First aid kits, clean water and electricity', s: 'Kits to be kept in schools and in vehicles.' },
-    { g: 'prog', rx: /33003/, t: '33,003 of 41,397 students received stipend', s: 'January 2026 response. Stipend needs 70% monthly attendance; some bank accounts are still being opened.' },
-    { g: 'prog', rx: /340 posts/i, t: '340 posts advertised, about 145 staff promoted', s: 'Recruitment requests also sent to the Punjab Public Service Commission.' },
-    { g: 'prog', rx: /12114|7,?702|2\.2 million/i, t: '12,114 assistive devices given out with UNICEF', s: 'Hearing aids, wheelchairs, walkers, white canes and glasses; a US$2.2 million grant approved for more.' },
-    { g: 'prog', rx: /52556/, t: '52,556 textbooks sent to district offices', s: '30,030 students had received uniforms by the January 2026 response.' },
-    { g: 'prog', rx: /41 drivers/i, t: '41 bus drivers recruited and posted', s: 'More driver posts still being filled.' },
-    { g: 'prog', rx: /cctv/i, t: 'CCTV cameras being installed', s: '3,104 of 3,468 cameras installed in phase 1 of the scheme.' },
-    { g: 'prog', rx: /200 new buses/i, t: '200 new buses proposed', s: 'Plan (PC-1) prepared, hoped for in the next financial year.' },
-    { g: 'prog', rx: /48 new schemes/i, t: '13 building schemes running, 48 proposed', s: '93 of 303 schools work in rented buildings.' },
-    { g: 'prog', rx: /facial attend/i, t: 'Facial attendance app for staff', s: 'Built with PITB and in use since January 2025, before the SMU visits began.' }
-  ];
+  // The three kinds of action the department reports. The items under each come from the
+  // department's own responses in the response file, never from a fixed list.
   var ACTG = [
-    { g: 'case', t: 'Action on the reported case', p: 'Steps aimed at a specific school or complaint.' },
-    { g: 'dir', t: 'Instructions to all district offices', p: 'Orders the department says it sent across Punjab.' },
-    { g: 'prog', t: 'Programmes and progress reported', p: 'Province-wide work the department pointed to.' }
+    { g: 'fixed', t: 'Action on the reported case', p: 'Steps aimed at a specific school or complaint.' },
+    { g: 'directed', t: 'Instructions to all district offices', p: 'Orders the department says it sent across Punjab.' },
+    { g: 'plan', t: 'Programmes and progress reported', p: 'Province-wide work the department pointed to.' }
   ];
+  var ACTX = {};
 
   var MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var $ = function (id) { return document.getElementById(id); };
@@ -107,6 +75,10 @@
   function months(a, b) { return Math.max(1, Math.round(days(a, b) / 30.44)); }
   function median(a) { if (!a.length) return null; a = a.slice().sort(function (x, y) { return x - y; }); var m = Math.floor(a.length / 2); return a.length % 2 ? a[m] : Math.round((a[m - 1] + a[m]) / 2); }
   function txt(it) { return it.x.map(function (i) { return RTEXT[i]; }).join(' '); }
+  // The same response, whatever its spacing, capitals or punctuation.
+  function same(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+  function clip(s, max) { s = String(s).replace(/\s+/g, ' ').trim(); return s.length > max ? s.slice(0, max - 1).replace(/\s+\S*$/, '') + '…' : s; }
+  function andList(a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
 
   /* Dates: the filter keeps the visits made between From and To. */
   function keyToISO(k) { var s = String(k); return s.slice(0, 4) + '-' + s.slice(4, 6) + '-' + s.slice(6, 8); }
@@ -224,39 +196,72 @@
       return '<button type="button" class="card out" data-filter="t:' + t.id + '"><div class="out-num">' + n(o.types[t.id]) + '</div><div class="out-lbl"><span class="sw ' + t.sw + '"></span>' + esc(t.label) + '</div><div class="out-sub">' + esc(t.sub) + '</div></button>';
     }).join('');
 
-    /* actions */
-    var reps = reportsOf(list), hit = {};
-    ACTS.forEach(function (a, i) { hit[i] = { n: 0, inst: [] }; });
+    /* actions: the department's own responses, grouped by kind, each with the reports it was given in */
+    var reps = reportsOf(list), acts = {}, given = {};
+    ACTX = {};
+    ACTG.forEach(function (g) { acts[g.g] = {}; });
     reps.forEach(function (x) {
-      var all = x.r.it.filter(function (it) { return it.x.length; }).map(txt).join(' ');
-      ACTS.forEach(function (a, i) { if (a.rx.test(all)) { hit[i].n++; if (x.s) hit[i].inst.push(x.s); } });
+      x.r.it.forEach(function (it) {
+        if (!it.x.length) return;
+        var key = same(txt(it));
+        (given[key] = given[key] || {})[x.r.id] = 1;
+        var a = acts[it.t];
+        if (!a) return;
+        var e = a[key] = a[key] || { key: key, text: txt(it), reports: {}, inst: [] };
+        if (!e.reports[x.r.id]) { e.reports[x.r.id] = 1; if (x.s && e.inst.indexOf(x.s) < 0) e.inst.push(x.s); }
+      });
     });
     $('acts').innerHTML = ACTG.map(function (g) {
-      var items = ACTS.map(function (a, i) { return { a: a, i: i, h: hit[i] }; }).filter(function (x) { return x.a.g === g.g; }).sort(function (a, b) { return b.h.n - a.h.n; });
-      var btn = function (x) {
-        var one = x.h.inst.length === 1 ? x.h.inst[0] : null;
-        var sub = x.a.s + (one && x.a.g === 'case' ? ' (' + esc(one.n) + ')' : '');
-        return '<button type="button" class="act' + (x.h.n ? '' : ' zero') + '" ' + (one ? 'data-open="' + esc(one.k) + '"' : 'data-filter="a:' + x.i + '"') + '><span><b>' + esc(x.a.t) + '</b><small>' + esc(sub) + '</small></span><span class="cnt">' + (x.h.n ? pl(x.h.n, 'response', 'responses') : 'none here') + '</span></button>';
+      var items = Object.keys(acts[g.g]).map(function (k) { var e = acts[g.g][k]; e.n = Object.keys(e.reports).length; return e; })
+        .sort(function (a, b) { return b.n - a.n || a.text.localeCompare(b.text); });
+      var btn = function (e) {
+        var one = e.inst.length === 1 ? e.inst[0] : null, id = g.g + ':' + e.key;
+        ACTX[id] = e.text;
+        var sub = e.inst.length ? (one ? esc(one.n) + ', ' + esc(one.d) : 'At ' + pl(e.inst.length, 'school', 'schools')) : 'Not tied to one school';
+        return '<button type="button" class="act" ' + (one ? 'data-open="' + esc(one.k) + '"' : 'data-filter="a:' + esc(id) + '"') + ' title="' + esc(e.text) + '"><span><b>' + esc(clip(e.text, 150)) + '</b><small>' + sub + '</small></span><span class="cnt">' + pl(e.n, 'response', 'responses') + '</span></button>';
       };
-      return '<div class="card act-col"><h3>' + g.t + '</h3><p>' + g.p + '</p>' + items.slice(0, 4).map(btn).join('') +
-        (items.length > 4 ? '<details class="act-more"><summary>Show ' + (items.length - 4) + ' more</summary>' + items.slice(4).map(btn).join('') + '</details>' : '') + '</div>';
+      return '<div class="card act-col"><h3>' + g.t + '</h3><p>' + g.p + '</p>' + (items.length ? items.slice(0, 4).map(btn).join('') +
+        (items.length > 4 ? '<details class="act-more"><summary>Show ' + (items.length - 4) + ' more</summary>' + items.slice(4).map(btn).join('') + '</details>' : '') : '<p class="empty">None in this selection.</p>') + '</div>';
     }).join('');
-    $('caveat').innerHTML = '<b>These are the department\'s own statements.</b> SMU has not checked them, except where an school was visited again (next section). Many responses repeat the same province-wide text for every school.' +
+    // Responses that repeat, word for word, text given for other reports.
+    var repeated = {};
+    Object.keys(given).forEach(function (k) { var ids = Object.keys(given[k]); if (ids.length > 1) ids.forEach(function (id) { repeated[id] = 1; }); });
+    var nRepeated = Object.keys(repeated).length;
+    $('caveat').innerHTML = '<b>These are the department\'s own statements.</b> SMU has not checked them, except where a school was visited again (next section).' +
+      (nRepeated ? ' ' + n(nRepeated) + ' of the ' + pl(reps.length, 'response', 'responses') + ' repeat text given word for word for other schools.' : '') +
       (META.replyMax ? ' Responses stop at ' + dl(META.replyMax) + ', and SMU visits since then have no reports on file.' : '');
   }
 
   /* Impact cards, in the banner */
   function renderImpact(o, rv, list) {
     var ans = o.items - o.types.none - o.types.notans;
-    var susp = reportsOf(list).some(function (x) { return x.r.it.some(function (it) { return it.x.length && /suspended/i.test(txt(it)); }); });
+    // What the answers were, counted from the responses themselves.
+    var said = { fixed: 'said to be resolved or acted on', directed: 'answered with instructions to district offices', plan: 'answered by pointing to a programme or plan', disputed: 'questioned or explained' };
+    var kinds = Object.keys(said).filter(function (t) { return o.types[t]; }).map(function (t) { return n(o.types[t]) + (o.types[t] === 1 ? ' was ' : ' were ') + said[t]; });
     $('imp-1').innerHTML = '<span class="imp-tag">Impact</span><div class="imp-num">' + (o.items ? pct(ans, o.items) + '%' : '&ndash;') + '</div><div class="imp-txt"><b>' +
       (o.items ? 'of the issues SMU raised got an answer from the department' : 'No SMU reports here yet') + '</b><small>' +
-      (o.items ? 'Answers include orders to all district offices on cleanliness, stipends and transport' + (susp ? ', and officers suspended after students were beaten' : '') + '.' : '') + '</small></div>';
+      (o.items && kinds.length ? 'Of the ' + pl(o.items, 'issue', 'issues') + ', ' + andList(kinds) + '.' : '') + '</small></div>';
     var t = rv.tt1 - rv.tt0, sti = rv.rows.filter(function (a) { return a.row.k === 'sti'; })[0];
     $('imp-2').innerHTML = '<span class="imp-tag">Impact</span><div class="imp-num">' + (rv.n ? (t >= 0 ? '+' : '−') + n(Math.abs(t)) : '&ndash;') + '</div><div class="imp-txt"><b>' +
       (rv.n ? (t >= 0 ? 'more teachers' : 'fewer teachers') + ' where SMU went back' : 'No school visited again here yet') + '</b><small>' +
       (rv.n ? 'At the schools visited again, teachers on roll went from ' + n(rv.tt0) + ' to ' + n(rv.tt1) + ' and children enrolled from ' + n(rv.en0) + ' to ' + n(rv.en1) + '.' +
         (sti && sti.dn > sti.up ? ' Stipend payments fell at some of the same places; see below.' : '') : '') + '</small></div>';
+  }
+
+  // Up to three rounds of visits, split at the longest gaps between visit dates (a month or more).
+  function visitRounds(list) {
+    var dates = {};
+    list.forEach(function (s) { s.vv.forEach(function (v) { dates[v.dt] = 1; }); });
+    dates = Object.keys(dates).sort();
+    if (!dates.length) return [];
+    var cuts = dates.slice(1).map(function (d, i) { return { i: i + 1, gap: days(dates[i], d) }; })
+      .filter(function (c) { return c.gap >= 30; }).sort(function (a, b) { return b.gap - a.gap; }).slice(0, 2)
+      .map(function (c) { return c.i; }).sort(function (a, b) { return a - b; });
+    return [0].concat(cuts).map(function (start, k, all) {
+      var part = dates.slice(start, k + 1 < all.length ? all[k + 1] : dates.length), from = part[0], to = part[part.length - 1];
+      var label = ml(from) === ml(to) ? ml(from) : from.slice(0, 4) === to.slice(0, 4) ? MN[Number(from.slice(5, 7)) - 1] + ' to ' + ml(to) : ml(from) + ' to ' + ml(to);
+      return { label: label, from: from, to: to };
+    });
   }
 
   /* Visited again */
@@ -275,9 +280,10 @@
       return '<b>' + esc(s.n) + '</b> was found closed on ' + closedDates(s) + '. That visit is kept on record but left out of every figure, so ' + (s.vv.length > 1 ? 'its open visits are compared instead.' : 'it is not counted as visited again.');
     }).join(' ');
 
-    /* rounds */
-    var rows = PROM.map(function (p) {
-      var cells = ROUNDS.map(function (rd) {
+    /* rounds of visits, worked out from the visit dates */
+    var rounds = visitRounds(list);
+    var rows = REV.map(function (p) {
+      var cells = rounds.map(function (rd) {
         var c = { n: 0, ok: 0, p: 0, t: 0 };
         list.forEach(function (s) { s.vv.forEach(function (v) {
           if (v.dt < rd.from || v.dt > rd.to) return;
@@ -287,13 +293,15 @@
         c.v = c.n < 5 ? null : p.rate ? c.p / c.t : c.ok / c.n;
         return c;
       });
-      var a = cells[0].v, b = cells[2].v !== null ? cells[2].v : cells[1].v;
-      return '<tr><td class="lab">' + p.label + '</td><td class="said">' + esc(p.said) + '</td>' + cells.map(function (c, i) {
+      if (!cells.some(function (c) { return c.n; })) return '';
+      var a = cells.length ? cells[0].v : null;
+      return '<tr><td class="lab">' + p.label + '</td>' + cells.map(function (c, i) {
         var cls = i > 0 && a !== null && c.v !== null ? (c.v < a - 0.05 ? 'dn' : c.v > a + 0.05 ? 'up' : '') : '';
         return '<td class="r ' + cls + '">' + (c.v === null ? '&ndash;' : Math.round(c.v * 100) + '%') + '<small>' + (c.n < 5 ? (c.n ? 'too few visits' : 'no visits') : pl(c.n, 'visit', 'visits')) + '</small></td>';
       }).join('') + '</tr>';
-    });
-    $('rnd-t').innerHTML = '<thead><tr><th>Check</th><th>What the department said</th>' + ROUNDS.map(function (r) { return '<th class="r">' + r.label + '</th>'; }).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody>';
+    }).join('');
+    $('rnd-t').innerHTML = rows ? '<thead><tr><th>Check</th>' + rounds.map(function (r) { return '<th class="r">' + r.label + '</th>'; }).join('') + '</tr></thead><tbody>' + rows + '</tbody>'
+      : '<tbody><tr><td class="empty">No visits in this selection.</td></tr></tbody>';
 
     $('rv-list').innerHTML = rv.list.slice().sort(function (a, b) { return (b.up - b.dn) - (a.up - a.dn) || a.n.localeCompare(b.n); }).map(function (s) {
       return '<button type="button" data-open="' + esc(s.k) + '"><span>' + esc(s.n) + '<small>' + esc(s.d) + ' &middot; ' + dl(s.F.dt) + ' and ' + dl(s.L.dt) + (s.vv.length > 2 ? ' (' + s.vv.length + ' visits)' : '') + '</small></span><span class="mk"><i class="g">' + s.up + '</i><i class="w">' + s.dn + '</i></span></button>';
@@ -365,7 +373,7 @@
   var C = { good: css.getPropertyValue('--good').trim(), crit: css.getPropertyValue('--crit').trim(), surf: css.getPropertyValue('--surface').trim(), ink: css.getPropertyValue('--ink').trim(), deep: css.getPropertyValue('--deep').trim() };
   var renderer = L.canvas({ padding: 0.3, tolerance: 5 });
   var pins = L.layerGroup().addTo(map);
-  var ring = null;
+  var ring = null, focusPin = null, drawn = {};
   var PUNJAB = [[27.7, 69.3], [34.1, 75.5]];
   function radius() { var z = map.getZoom() || 7; return z < 7 ? 3 : z < 8 ? 3.5 : z < 10 ? 4.5 : z < 12 ? 6 : 7.5; }
   function status(s) { return s.vv.length > 1 ? 'r' : s.v.length ? 'v' : 'n'; }
@@ -388,7 +396,7 @@
     if (k === 'c:') return !!s.cs[id];
     if (k === 't:') return !!s.ts[id];
     if (k === 'g:') return s.vv.length > 1;
-    if (k === 'a:') { var a = ACTS[Number(id)]; return s.r.some(function (r) { return r.it.some(function (it) { return it.x.length && a.rx.test(txt(it)); }); }); }
+    if (k === 'a:') { var p = id.indexOf(':'), t = id.slice(0, p), key = id.slice(p + 1); return s.r.some(function (r) { return r.it.some(function (it) { return it.t === t && it.x.length && same(txt(it)) === key; }); }); }
     if (f === 'rep') return responded(s);
     if (f === 'norep') return s.v.length > 0 && !responded(s);
     return true;
@@ -399,7 +407,7 @@
     if (k === 'c:') return 'Issue reported: ' + (CAT[id] ? CAT[id].label : id);
     if (k === 't:') return 'Response: ' + RTI[id].label;
     if (k === 'g:') return 'Visited again';
-    if (k === 'a:') return ACTS[Number(id)].t;
+    if (k === 'a:') return 'Response: "' + clip(ACTX[id] || '', 60) + '"';
     if (f === 'rep') return 'Department responded';
     if (f === 'norep') return 'Visited, no department response yet';
     return '';
@@ -413,6 +421,7 @@
   }
   function renderMap(fit) {
     pins.clearLayers();
+    drawn = {};
     var list = scoped().filter(matchesMap);
     var cnt = { v: 0, r: 0, n: 0 }, unmapped = 0, pts = [], visitIds = [];
     var order = { n: 0, v: 1, r: 2 };
@@ -420,7 +429,7 @@
     list.forEach(function (s) {
       if (s.la === null || s.la === undefined) { unmapped++; return; }
       var st = status(s);
-      cnt[st]++; pins.addLayer(makeMarker(s)); pts.push([s.la, s.lo]);
+      cnt[st]++; pins.addLayer(makeMarker(s)); drawn[s.k] = 1; pts.push([s.la, s.lo]);
       // The visit the school's findings come from: its latest while open, else its latest.
       if (st !== 'n') visitIds.push((s.L || s.last).id);
     });
@@ -444,11 +453,17 @@
       if (zone.length && (state.district || state.zone || state.filter)) map.fitBounds(L.latLngBounds(zone).pad(0.08), { maxZoom: 12 });
       else map.fitBounds(PUNJAB);
     }
+    if (state.sel) placeRing(ALL.filter(function (x) { return x.k === state.sel; })[0] || null);
   }
   map.on('zoomend', function () { if (loaded) renderMap(false); });
+  // The school opened always shows inside its ring, even when the map's choices hide its pin.
   function placeRing(s) {
     if (ring) { map.removeLayer(ring); ring = null; }
-    if (s && s.la !== null && s.la !== undefined) ring = L.circleMarker([s.la, s.lo], { radius: 13, color: C.ink, weight: 2.5, fill: false, interactive: false, renderer: renderer }).addTo(map);
+    if (focusPin) { map.removeLayer(focusPin); focusPin = null; }
+    if (s && s.la !== null && s.la !== undefined) {
+      if (!drawn[s.k]) focusPin = makeMarker(s).addTo(map);
+      ring = L.circleMarker([s.la, s.lo], { radius: 13, color: C.ink, weight: 2.5, fill: false, interactive: false, renderer: renderer }).addTo(map);
+    }
   }
   function syncSeg() { document.querySelectorAll('#mapsec .seg button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.show === state.show)); }); }
 
@@ -609,7 +624,7 @@
     var t = e.target.closest('.rtx');
     if (t) { t.classList.toggle('open'); return; }
     t = e.target.closest('[data-open]');
-    if (t) { openById(t.dataset.open); $('mapsec').scrollIntoView(); return; }
+    if (t) { openById(t.dataset.open); $('map').scrollIntoView({ block: 'center' }); return; }
     t = e.target.closest('[data-filter]');
     if (t) { selectFilter(t.dataset.filter); return; }
     t = e.target.closest('[data-sort]');
@@ -654,7 +669,7 @@
     if (!links.offsetWidth) return;
     var list = links.querySelectorAll('a'), total = (parseFloat(getComputedStyle(links).columnGap) || 0) * (list.length - 1);
     list.forEach(function (a) { var r = document.createRange(); r.selectNodeContents(a); total += r.getBoundingClientRect().width; });
-    $('psrpFilters').style.setProperty('--spe-nav-text', Math.ceil(total) + 2 + 'px');
+    $('psrpFilters').style.setProperty('--nav-text', Math.ceil(total) + 2 + 'px');
   }
   // The search box keeps the PSRP wording where it fits; on laptops, where it shares its line
   // with the Download button, it says the same thing more briefly.

@@ -1,5 +1,7 @@
 <?php
 
+use App\Imports\Initiatives\SchoolEducation\AdditionalClassroomResponseImport;
+use App\Imports\Initiatives\SchoolEducation\AdditionalClassroomSchoolListImport;
 use App\Imports\Initiatives\SchoolEducation\PsrpPhase1ResponseImport;
 use App\Imports\Initiatives\SchoolEducation\PsrpPhase1SchoolListImport;
 use App\Imports\Initiatives\SchoolEducation\PsrpPhase2ResponseImport;
@@ -21,5 +23,9 @@ return [
     'special_education_institutes' => [
         InitiativeFile::TYPE_DEPARTMENT_LIST => SpecialEducationInstituteListImport::class,
         InitiativeFile::TYPE_DEPARTMENT_RESPONSE => SpecialEducationResponseImport::class,
+    ],
+    'additional_classrooms' => [
+        InitiativeFile::TYPE_DEPARTMENT_LIST => AdditionalClassroomSchoolListImport::class,
+        InitiativeFile::TYPE_DEPARTMENT_RESPONSE => AdditionalClassroomResponseImport::class,
     ],
 ];
