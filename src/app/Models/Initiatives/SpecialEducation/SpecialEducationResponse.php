@@ -8,12 +8,6 @@ use Illuminate\Support\Facades\DB;
 // The department's reply to one issue in our report on an institute.
 class SpecialEducationResponse extends Model
 {
-    // The department's response file spells these institutes differently from its list.
-    private const NAME_SPELLINGS = [
-        'govt special education centre fathepur' => 'govt special education centre fatehpur',
-        'govt special education centre fathe garh sialkot' => 'govt special education centre fateh garh sialkot',
-    ];
-
     protected $table = 'special_education_institutes_responses';
 
     protected $guarded = ['id'];
@@ -98,6 +92,6 @@ class SpecialEducationResponse extends Model
     {
         $words = trim((string) preg_replace('/[^a-z0-9]+/', ' ', mb_strtolower((string) $text)));
 
-        return str_replace(' ', '', self::NAME_SPELLINGS[$words] ?? $words);
+        return str_replace(' ', '', $words);
     }
 }

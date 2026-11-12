@@ -180,7 +180,14 @@ trait ManagesPsrpVisits
                 $cells = [];
 
                 foreach ($columns as $key => $column) {
-                    $value = data_get($row, $key) ?? ($column['blank'] ?? null);
+                    $value = data_get($row, $key);
+
+                    // A blank written the file's own way ("Nil", "N/A", "—"), whatever the column's type.
+                    if ($value === null && isset($column['blank'])) {
+                        $cells[] = Cell::fromValue($column['blank']);
+
+                        continue;
+                    }
 
                     // Real dates and numbers, so they can be sorted and added up in Excel.
                     $cells[] = match (true) {

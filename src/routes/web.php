@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\InitiativeController;
 use App\Http\Controllers\InitiativeFileController;
+use App\Http\Controllers\Initiatives\SchoolEducation\AdditionalClassroomsController;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase1Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase2Controller;
 use App\Http\Controllers\Initiatives\SpecialEducation\SpecialEducationInstitutesController;
@@ -78,6 +79,19 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/initiatives/{initiative}/special-education-institutes/import', [SpecialEducationInstitutesController::class, 'import'])
     ->name('initiatives.special-education-institutes.import');
+
+    // Additional Classrooms (School Education)
+    Route::get('/initiatives/{initiative}/additional-classrooms/data', [AdditionalClassroomsController::class, 'data'])
+    ->name('initiatives.additional-classrooms.data');
+
+    Route::get('/initiatives/{initiative}/additional-classrooms/export', [AdditionalClassroomsController::class, 'export'])
+    ->name('initiatives.additional-classrooms.export');
+
+    Route::post('/initiatives/{initiative}/additional-classrooms/map-download', [AdditionalClassroomsController::class, 'mapDownload'])
+    ->name('initiatives.additional-classrooms.map-download');
+
+    Route::post('/initiatives/{initiative}/additional-classrooms/import', [AdditionalClassroomsController::class, 'import'])
+    ->name('initiatives.additional-classrooms.import');
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])

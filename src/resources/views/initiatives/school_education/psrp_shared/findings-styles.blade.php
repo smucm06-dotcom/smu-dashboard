@@ -243,9 +243,32 @@ body { background: #eef5f0; }
 .psrp-breadcrumb a { color: var(--primary); font-weight: 600; }
 .psrp-breadcrumb a:hover { text-decoration: underline; }
 .psrp-breadcrumb svg { width: 13px; height: 13px; }
+/* Export to PDF, at the end of the breadcrumb row (see pdf-export). */
+.psrp-pdf-btn { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border: 1px solid #0b6b45; border-radius: 8px; background: #0b6b45; color: #fff; font: 600 13px/1.2 "Inter", "Segoe UI", system-ui, sans-serif; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+.psrp-pdf-btn:hover { background: #063d28; border-color: #063d28; }
+.psrp-pdf-btn:focus-visible { outline: 2px solid #c9a24a; outline-offset: 2px; }
+.psrp-pdf-btn:disabled { opacity: .75; cursor: progress; }
+.psrp-pdf-btn svg { width: 16px; height: 16px; flex: none; }
 .psrp-findings .fg { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .psrp-findings .fb-meta { display: flex; align-items: center; flex: 1 1 auto; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
 .psrp-findings .ctl { max-width: 100%; }
+
+/* The filter bar keeps the filters and the section links on one row where they fit, on every
+   initiative page. What the page shows gives way first: it is cut short with "…" (hovering shows
+   all of it), then left out, and the links close up a little. Only then do the links take a
+   second row. --nav-text is the links' own width, which each page's script sets. */
+.psrp-findings.filterbar .fb-meta { flex: 1 1 var(--nav-text, 420px); flex-wrap: nowrap; }
+.psrp-findings.filterbar .scope { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.psrp-findings.filterbar .nav { flex: none; flex-wrap: nowrap; white-space: nowrap; }
+.psrp-findings.filterbar .nav a { padding-left: clamp(0px, calc((100cqi - var(--nav-text, 420px)) / 12), 10px); padding-right: clamp(0px, calc((100cqi - var(--nav-text, 420px)) / 12), 10px); }
+/* Phones have no links in the bar, so there the text always shows. */
+@container psrp (min-width: 721px) {
+  .psrp-findings.filterbar .fb-meta { container: filterMeta / inline-size; }
+}
+@container filterMeta (max-width: 600px) {
+  .psrp-findings.filterbar .scope { display: none; }
+}
+
 .psrp-findings .dl-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; white-space: nowrap; }
 .psrp-findings .dl-btn:hover { background: var(--deep); border-color: var(--deep); }
 .psrp-findings .dl-btn svg { width: 16px; height: 16px; }
