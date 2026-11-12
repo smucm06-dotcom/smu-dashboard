@@ -27,9 +27,6 @@ class PsrpPhase1ResponseImport implements InitiativeFileImport
         'response' => ['pspr pef response', 'department response', 'response', 'reply'],
     ];
 
-    // Codes known to be mistyped in the department's sheets.
-    private const EMIS_CORRECTIONS = ['311503116' => '31150316'];
-
     public function __construct(private SpreadsheetReader $reader)
     {
     }
@@ -52,7 +49,7 @@ class PsrpPhase1ResponseImport implements InitiativeFileImport
             // it out of the figures, as before.
             $rows[] = [
                 'source_sr' => is_numeric($row['source_sr'] ?? null) && (float) $row['source_sr'] >= 0 ? (int) $row['source_sr'] : null,
-                'emis_code' => self::EMIS_CORRECTIONS[$emis] ?? $emis,
+                'emis_code' => $emis,
                 'district' => $this->cleanText($row['district'] ?? null, 100),
                 'visit_date' => $this->date($row['visit_date'] ?? null),
                 'sent_remarks' => $this->cleanText($row['sent_remarks'] ?? null),

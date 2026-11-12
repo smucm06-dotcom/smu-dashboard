@@ -19,6 +19,11 @@
         </a>
         <i data-lucide="chevron-right" aria-hidden="true"></i>
         <span aria-current="page">{{ $initiative->name }}</span>
+        {{-- The page as it is on the screen, as a PDF download (see psrp_shared/pdf-export) --}}
+        <button type="button" class="psrp-pdf-btn" id="pdfExport" data-pdf-skip data-pdf-name="{{ $initiative->name }}">
+            <i data-lucide="file-down" aria-hidden="true"></i>
+            <span>Export to PDF</span>
+        </button>
     </nav>
 
     {{-- Filters: these apply to the whole page. The dates choose which visits count. --}}
@@ -104,8 +109,8 @@
             <p class="note" id="rev-note"></p>
 
             <details class="card more-d" style="margin-top:14px">
-                <summary>More detail: did the department's answers hold up at later visits?</summary>
-                <p class="sub">Share of visits where things were in order, in each round of visits. Different schools were visited in each round, so read this as a broad signal, not a strict before and after.</p>
+                <summary>More detail: how the checks changed from one round of visits to the next</summary>
+                <p class="sub">Share of visits where things were in order, in each round of visits. Rounds are worked out from the gaps between visit dates. Different schools were visited in each round, so read this as a broad signal, not a strict before and after.</p>
                 <div class="tablewrap"><table class="vt" id="rnd-t"></table></div>
             </details>
 
@@ -206,4 +211,5 @@
 <script src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
 @include('initiatives.special_education.special_education_institutes.partials.findings-script')
 @include('initiatives.school_education.psrp_shared.records-script')
+@include('initiatives.school_education.psrp_shared.pdf-export')
 @endpush

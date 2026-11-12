@@ -29,7 +29,7 @@ class EducationSeeder extends Seeder
 
                 [
                     'name' => 'Construction of Additional Classrooms in Public Schools of Punjab (through PEIMA)',
-                    'table_name' => 'construction_additional_classrooms_peima',
+                    'table_name' => 'additional_classrooms',
                 ],
 
                 [
