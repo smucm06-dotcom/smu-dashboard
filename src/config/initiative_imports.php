@@ -6,6 +6,8 @@ use App\Imports\Initiatives\SchoolEducation\PsrpPhase1ResponseImport;
 use App\Imports\Initiatives\SchoolEducation\PsrpPhase1SchoolListImport;
 use App\Imports\Initiatives\SchoolEducation\PsrpPhase2ResponseImport;
 use App\Imports\Initiatives\SchoolEducation\PsrpPhase2SchoolListImport;
+use App\Imports\Initiatives\SchoolEducation\SchoolMealResponseImport;
+use App\Imports\Initiatives\SchoolEducation\SchoolMealSchoolListImport;
 use App\Imports\Initiatives\SpecialEducation\SpecialEducationInstituteListImport;
 use App\Imports\Initiatives\SpecialEducation\SpecialEducationResponseImport;
 use App\Models\InitiativeFile;
@@ -27,5 +29,9 @@ return [
     'additional_classrooms' => [
         InitiativeFile::TYPE_DEPARTMENT_LIST => AdditionalClassroomSchoolListImport::class,
         InitiativeFile::TYPE_DEPARTMENT_RESPONSE => AdditionalClassroomResponseImport::class,
+    ],
+    'punjab_schools_meal_program' => [
+        InitiativeFile::TYPE_DEPARTMENT_LIST => SchoolMealSchoolListImport::class,
+        InitiativeFile::TYPE_DEPARTMENT_RESPONSE => SchoolMealResponseImport::class,
     ],
 ];

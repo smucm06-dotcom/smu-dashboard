@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 class PsrpPhase1Dashboard
 {
     // Change this when the shape of the data changes, so browsers don't keep the old copy.
-    private const DATA_VERSION = 2;
+    private const DATA_VERSION = 3;
 
     public const NO_DISTRICT = 'Not recorded';
 

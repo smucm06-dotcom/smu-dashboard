@@ -3,6 +3,7 @@
 use App\Http\Controllers\Initiatives\SchoolEducation\AdditionalClassroomsController;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase1Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase2Controller;
+use App\Http\Controllers\Initiatives\SchoolEducation\SchoolMealProgramController;
 use App\Http\Controllers\Initiatives\SpecialEducation\SpecialEducationInstitutesController;
 
 return [
@@ -10,4 +11,5 @@ return [
     'public_school_reorganization_phase_2' => PsrpPhase2Controller::class,
     'special_education_institutes' => SpecialEducationInstitutesController::class,
     'additional_classrooms' => AdditionalClassroomsController::class,
+    'punjab_schools_meal_program' => SchoolMealProgramController::class,
 ];

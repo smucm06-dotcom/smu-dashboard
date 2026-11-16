@@ -236,8 +236,8 @@
   }
 
   function fileName() {
-    var scope = document.getElementById('scope'), what = scope ? (scope.title || scope.textContent) : '';
-    what = what.replace(/^Everything below shows\s*/i, '').replace(/^Showing\s*/i, '');
+    // What the filters show, which each page's script puts on the button ("Kot Addu, visits from ...").
+    var what = button.getAttribute('data-pdf-what') || '';
     var d = new Date(), date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     var name = [button.getAttribute('data-pdf-name') || document.title, what, date].filter(Boolean).join(' - ');
     return name.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180) + '.pdf';
