@@ -74,7 +74,8 @@ trait ManagesPsrpVisits
 
     // The schools the map shows for one issue. The page sends their visits, so the file always
     // holds exactly what is on the map, whatever filters are on.
-    private function downloadMapSchools(Request $request, string $model, array $columns, string $prefix)
+    // Rows come in the visit file's order: by its Sr column unless another column is named.
+    private function downloadMapSchools(Request $request, string $model, array $columns, string $prefix, string $orderColumn = 'source_sr')
     {
         $sent = $request->input('ids');
         $ids = array_map('intval', array_filter(explode(',', is_string($sent) ? $sent : ''), 'ctype_digit'));
@@ -83,7 +84,7 @@ trait ManagesPsrpVisits
 
         $visits = $model::query()
             ->whereIntegerInRaw('id', $ids)
-            ->orderBy('source_sr')
+            ->orderBy($orderColumn)
             ->orderBy('id')
             ->cursor();
 

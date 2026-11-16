@@ -7,6 +7,8 @@
     <title>
         @yield('title', 'Dashboard') | SMU Dashboard
     </title>
+    <!-- The browser tab's icon: the round emblem from the SMU logo -->
+    <link rel="icon" type="image/png" href="{{ asset('images/tab-logo.png') }}">
 
     <!-- Poppins Font -->
     <link rel="preconnect"

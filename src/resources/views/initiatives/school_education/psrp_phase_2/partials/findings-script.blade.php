@@ -85,15 +85,8 @@
   function scoped() { return state.district ? ALL.filter(function (s) { return s.d === state.district; }) : ALL; }
   function usesReply(s) { return s.r && (inRange(s) || (!s.v && fullRange())); }
 
-  function scopeText() { return 'Everything below shows ' + (state.district || 'all districts') + ', ' + (fullRange() ? 'all dates' : rangeText()); }
-  // What the page shows, in the filter bar. Where the one-row bar has no room for the whole
-  // sentence it is said more briefly, and hovering always shows all of it.
-  function fitScope() {
-    var el = $('scope'), text = scopeText();
-    el.textContent = text;
-    el.title = text;
-    if (el.clientWidth && el.scrollWidth > el.clientWidth + 1) el.textContent = text.replace(/^Everything below shows /, 'Showing ');
-  }
+  // What the page shows, for the name of the PDF made with Export to PDF ("Kot Addu, visits from ...").
+  function nameForPdf() { $('pdfExport').setAttribute('data-pdf-what', (state.district || 'all districts') + ', ' + (fullRange() ? 'all dates' : rangeText())); }
 
   /* Summary */
   function summarise(list) {
@@ -463,7 +456,7 @@
 
   function renderAll(fit) {
     var list = scoped(), o = summarise(list);
-    fitScope();
+    nameForPdf();
     $('f-clear').hidden = !state.district && fullRange();
     renderTopbar(list);
     if (META.minKey) { $('f-from').value = keyToISO(state.from); $('f-to').value = keyToISO(state.to); }
@@ -564,7 +557,6 @@
     measureLinks();
     var sticky = getComputedStyle(bar).position === 'sticky';
     document.documentElement.style.scrollPaddingTop = (banner.offsetHeight + (sticky ? bar.offsetHeight : 0) + 12) + 'px';
-    fitScope();
   }
   setScrollOffset();
   var offsetWatcher = new ResizeObserver(setScrollOffset);

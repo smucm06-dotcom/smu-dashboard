@@ -58,7 +58,6 @@
             <noscript><button type="submit" class="ctl">Apply</button></noscript>
             <button type="button" class="link" id="f-clear" hidden>Clear filters</button>
             <div class="fb-meta">
-                <span class="scope" id="scope"></span>
                 <nav class="nav" aria-label="Sections">
                     <a href="#issues">Issues</a><a href="#changed">Impact</a><a href="#revisit">Visited again</a><a href="#mapsec">Map</a><a href="#districts">Districts</a><a href="#psrp-records">Records</a>
                 </nav>

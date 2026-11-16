@@ -8,6 +8,7 @@ use App\Http\Controllers\InitiativeFileController;
 use App\Http\Controllers\Initiatives\SchoolEducation\AdditionalClassroomsController;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase1Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase2Controller;
+use App\Http\Controllers\Initiatives\SchoolEducation\SchoolMealProgramController;
 use App\Http\Controllers\Initiatives\SpecialEducation\SpecialEducationInstitutesController;
 // Login routes
 Route::get('/', [AuthController::class, 'showLogin'])
@@ -92,6 +93,19 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/initiatives/{initiative}/additional-classrooms/import', [AdditionalClassroomsController::class, 'import'])
     ->name('initiatives.additional-classrooms.import');
+
+    // Chief Minister's Punjab Schools Meal Program (School Education)
+    Route::get('/initiatives/{initiative}/school-meal/data', [SchoolMealProgramController::class, 'data'])
+    ->name('initiatives.school-meal.data');
+
+    Route::get('/initiatives/{initiative}/school-meal/export', [SchoolMealProgramController::class, 'export'])
+    ->name('initiatives.school-meal.export');
+
+    Route::post('/initiatives/{initiative}/school-meal/map-download', [SchoolMealProgramController::class, 'mapDownload'])
+    ->name('initiatives.school-meal.map-download');
+
+    Route::post('/initiatives/{initiative}/school-meal/import', [SchoolMealProgramController::class, 'import'])
+    ->name('initiatives.school-meal.import');
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])
