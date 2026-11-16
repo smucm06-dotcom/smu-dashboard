@@ -479,20 +479,17 @@
     var list = scoped(), o = summarise(list);
     $('f-clear').hidden = !state.district && !state.zone && fullRange();
     if (META.minKey) { $('f-from').value = keyToISO(state.from); $('f-to').value = keyToISO(state.to); }
-    fitScope();
+    nameForPdf();
     renderFlow(o); renderImpact(o); renderIssues(o); renderConstruction(o); renderChanged(o, list); renderDistricts(); renderMap(fit);
     if (state.sel) {
       var s = ALL.filter(function (x) { return x.k === state.sel; })[0];
       if (s && list.indexOf(s) < 0) { state.sel = null; placeRing(null); renderHint(); } else if (s) openSchool(s, false, true);
     }
   }
-  // What the page shows, in the filter bar. Where the one-line bar has no room for the whole
-  // sentence it is said more briefly, and hovering always shows all of it.
-  function fitScope() {
-    var el = $('scope'), place = state.district ? state.district : state.zone ? state.zone + ' zone' : 'all of Punjab', dates = !META.minKey || fullRange() ? '' : ', visits from ' + rangeText();
-    el.textContent = 'Everything below shows ' + place + dates;
-    el.title = el.textContent;
-    if (el.clientWidth && el.scrollWidth > el.clientWidth + 1) el.textContent = 'Showing ' + place + dates;
+  // What the page shows, for the name of the PDF made with Export to PDF ("Kot Addu, visits from ...").
+  function nameForPdf() {
+    var place = state.district ? state.district : state.zone ? state.zone + ' zone' : 'all of Punjab', dates = !META.minKey || fullRange() ? '' : ', visits from ' + rangeText();
+    $('pdfExport').setAttribute('data-pdf-what', place + dates);
   }
   // Tells the records table below to show the same zone, district and dates.
   function filtersChanged() {
@@ -615,7 +612,6 @@
     measureLinks();
     var sticky = getComputedStyle(bar).position === 'sticky';
     document.documentElement.style.scrollPaddingTop = (banner.offsetHeight + (sticky ? bar.offsetHeight : 0) + 12) + 'px';
-    if (loaded) fitScope();
   }
   setScrollOffset();
   var offsetWatcher = new ResizeObserver(setScrollOffset);

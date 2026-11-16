@@ -14,7 +14,7 @@ class PsrpPhase1Response extends Model
     {
         return [
             'source_sr' => 'integer',
-            'visit_date' => 'date',
+            'audit_report_date' => 'date',
             'responded_at' => 'date',
         ];
     }

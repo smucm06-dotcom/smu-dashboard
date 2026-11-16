@@ -36,7 +36,6 @@ body { background: #eef5f0; }
 .psrp-findings.filterbar .psrp-wrap { display: flex; align-items: center; gap: 12px; padding-top: 9px; padding-bottom: 9px; flex-wrap: wrap; }
 .psrp-findings.filterbar label { font-weight: 650; font-size: 14px; }
 .psrp-findings .ctl { background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); padding: 7px 10px; min-height: 36px; }
-.psrp-findings .scope { color: var(--muted); font-size: 13px; }
 .psrp-findings .nav { margin-left: auto; display: flex; gap: 16px; font-size: 14px; flex-wrap: wrap; }
 .psrp-findings .nav a { color: var(--ink-2); text-decoration: none; }
 .psrp-findings .nav a:hover { color: var(--accent); text-decoration: underline; }
@@ -65,6 +64,9 @@ body { background: #eef5f0; }
 .psrp-findings .out-h { margin: 24px 0 10px; }
 .psrp-findings .out-h p { color: var(--ink-2); font-size: 14px; margin-top: 2px; }
 .psrp-findings .outs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+/* Six outcome cards (PSRP 1 when its response file has "Instructions issued"). Pages with their own
+   six-card rules keep them, as theirs come later. */
+.psrp-findings .outs.six { grid-template-columns: repeat(6, 1fr); }
 .psrp-findings .out { padding: 12px 14px; }
 .psrp-findings .out-num { font-size: 26px; font-weight: 740; line-height: 1.2; }
 .psrp-findings .out-lbl { font-weight: 650; font-size: 14px; line-height: 1.3; }
@@ -220,12 +222,12 @@ body { background: #eef5f0; }
   .psrp-findings .mapgrid, .psrp-findings .issgrid { grid-template-columns: minmax(0, 1fr); }
   .psrp-findings .mapcard { height: 500px; }
   .psrp-findings .panel { height: auto; max-height: 720px; }
-  .psrp-findings .outs, .psrp-findings .tiles { grid-template-columns: repeat(3, 1fr); }
+  .psrp-findings .outs, .psrp-findings .outs.six, .psrp-findings .tiles { grid-template-columns: repeat(3, 1fr); }
   .psrp-findings .stats { grid-template-columns: repeat(2, 1fr); }
 }
 @container psrp (max-width: 720px) {
   .psrp-wrap { padding: 0 16px; }
-  .psrp-findings .outs, .psrp-findings .tiles, .psrp-findings .insights, .psrp-findings .since { grid-template-columns: 1fr 1fr; }
+  .psrp-findings .outs, .psrp-findings .outs.six, .psrp-findings .tiles, .psrp-findings .insights, .psrp-findings .since { grid-template-columns: 1fr 1fr; }
   .psrp-findings .since { grid-template-columns: 1fr; }
   .psrp-findings .insights { grid-template-columns: 1fr; }
   .psrp-findings .nav { display: none; }
@@ -235,7 +237,7 @@ body { background: #eef5f0; }
   .psrp-findings .stat-num { font-size: 30px; }
 }
 @container psrp (max-width: 420px) {
-  .psrp-findings .stats, .psrp-findings .outs, .psrp-findings .tiles { grid-template-columns: 1fr; }
+  .psrp-findings .stats, .psrp-findings .outs, .psrp-findings .outs.six, .psrp-findings .tiles { grid-template-columns: 1fr; }
 }
 
 /* Additions to the design: the date range, and the states it needs that the design did not. */
@@ -253,20 +255,19 @@ body { background: #eef5f0; }
 .psrp-findings .fb-meta { display: flex; align-items: center; flex: 1 1 auto; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
 .psrp-findings .ctl { max-width: 100%; }
 
-/* The filter bar keeps the filters and the section links on one row where they fit, on every
-   initiative page. What the page shows gives way first: it is cut short with "…" (hovering shows
-   all of it), then left out, and the links close up a little. Only then do the links take a
-   second row. --nav-text is the links' own width, which each page's script sets. */
+/* The filter bar holds only the filters and the section links, on one row where they fit, on
+   every initiative page. Where room runs short the links close up a little; only then do they take
+   a second row. --nav-text is the links' own width, which each page's script sets. --nav-pads is
+   the number of link paddings that share the room left over: two per link, 12 for six links. */
 .psrp-findings.filterbar .fb-meta { flex: 1 1 var(--nav-text, 420px); flex-wrap: nowrap; }
-.psrp-findings.filterbar .scope { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .psrp-findings.filterbar .nav { flex: none; flex-wrap: nowrap; white-space: nowrap; }
-.psrp-findings.filterbar .nav a { padding-left: clamp(0px, calc((100cqi - var(--nav-text, 420px)) / 12), 10px); padding-right: clamp(0px, calc((100cqi - var(--nav-text, 420px)) / 12), 10px); }
-/* Phones have no links in the bar, so there the text always shows. */
+.psrp-findings.filterbar .nav a { padding-left: clamp(0px, calc((100cqi - var(--nav-text, 420px)) / var(--nav-pads, 12)), 10px); padding-right: clamp(0px, calc((100cqi - var(--nav-text, 420px)) / var(--nav-pads, 12)), 10px); }
 @container psrp (min-width: 721px) {
   .psrp-findings.filterbar .fb-meta { container: filterMeta / inline-size; }
 }
-@container filterMeta (max-width: 600px) {
-  .psrp-findings.filterbar .scope { display: none; }
+/* Phones have no links in the bar, so it holds the filters only. */
+@container psrp (max-width: 720px) {
+  .psrp-findings.filterbar .fb-meta { display: none; }
 }
 
 .psrp-findings .dl-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; white-space: nowrap; }

@@ -53,9 +53,11 @@
   var HIGHLIGHT = ['danger', 'water', 'salary', 'teach', 'fees'];
   var OUTCOMES = [
     { id: 'penalty', label: 'Penalty imposed', sub: 'The operator was penalised', badge: 'b-crit' },
-    { id: 'warning', label: 'Warning issued', sub: 'Warning letter sent to the operator', badge: 'b-warn' },
+    { id: 'warning', label: 'Warning issued', sub: 'Warning letter sent, or explanation called from the operator', badge: 'b-warn' },
     { id: 'fixed', label: 'Operator says fixed', sub: 'Fixed or being fixed, by the operator\'s own statement', badge: 'b-info' },
-    { id: 'inquiry', label: 'Under inquiry', sub: 'Investigation still running', badge: 'b-warn' },
+    // The newer response file's "Licensee has been directed to…", with nothing yet said to be fixed.
+    { id: 'directed', label: 'Instructions issued', sub: 'The operator was told to fix it', badge: 'b-info' },
+    { id: 'inquiry', label: 'Under inquiry', sub: 'Investigation running, or taken up with another office', badge: 'b-warn' },
     { id: 'cleared', label: 'No action needed', sub: 'Department closed it, often on operator evidence', badge: 'b-good' },
     { id: 'na', label: 'Not applicable', sub: 'Not handed over, or outside the programme', badge: 'b-mute' }
   ];
@@ -108,20 +110,12 @@
     var p = iso.split('-');
     return Number(p[2]) + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(p[1]) - 1] + ' ' + p[0];
   }
-  function scopeText() {
+  // What the page shows, for the name of the PDF made with Export to PDF ("Kot Addu, visits from ...").
+  function nameForPdf() {
     var dates = state.from && state.to ? ', visits from ' + longDate(state.from) + ' to ' + longDate(state.to)
       : state.from ? ', visits from ' + longDate(state.from) + ' onwards'
       : state.to ? ', visits up to ' + longDate(state.to) : '';
-    return 'Everything below shows ' + (state.district ? state.district + ' only' : 'all districts') + dates;
-  }
-
-  // What the page shows, in the filter bar. Where the one-row bar has no room for the whole
-  // sentence it is said more briefly, and hovering always shows all of it.
-  function fitScope() {
-    var el = $('scope'), text = scopeText();
-    el.textContent = text;
-    el.title = text;
-    if (el.clientWidth && el.scrollWidth > el.clientWidth + 1) el.textContent = text.replace(/^Everything below shows /, 'Showing ');
+    $('pdfExport').setAttribute('data-pdf-what', (state.district ? state.district + ' only' : 'all districts') + dates);
   }
 
   /* Summary */
@@ -177,13 +171,18 @@
     $('progress').innerHTML = '<div class="progress-h"><b>Share of issues addressed so far</b><span>' + n(o.addrIssues) + ' of ' + n(o.issues) + ' issues (' + p + '%)</span></div><div class="track" role="img" aria-label="' + p + ' percent of issues addressed"><i style="width:' + (o.issues ? o.addrIssues / o.issues * 100 : 0) + '%"></i></div>';
 
     $('out-sub').textContent = pl(o.replied, 'reply', 'replies') + ' linked to Phase 1 schools' + where.replace(/&amp;/g, '&') + '. Each school is counted once, under its main outcome.' + (hasDates() ? ' Only schools visited in these dates are counted.' : '');
+    // "Instructions issued" has a card when the response file has such replies at all, so the cards
+    // don't move as the filters change.
+    var directed = ALL.some(function (s) { return s.r && s.r.o === 'directed'; });
+    $('outs').className = 'outs' + (directed ? ' six' : '');
     $('outs').innerHTML = [
       ['penalty', o.outs.penalty + o.outs.warning, 'Penalty or warning', 'The operator was penalised or warned'],
       ['fixed', o.outs.fixed, OUT.fixed.label, 'By the operator\'s statement, not re-checked'],
+      directed ? ['directed', o.outs.directed, OUT.directed.label, OUT.directed.sub] : null,
       ['inquiry', o.outs.inquiry, OUT.inquiry.label, OUT.inquiry.sub],
       ['cleared', o.outs.cleared, OUT.cleared.label, n(o.clearedWith) + ' of these had issues on the visit form'],
       ['na', o.outs.na, OUT.na.label, OUT.na.sub]
-    ].map(function (c) {
+    ].filter(Boolean).map(function (c) {
       return '<div class="card out"><div class="out-num">' + n(c[1]) + '</div><div class="out-lbl">' + esc(c[2]) + '</div><div class="out-sub">' + esc(c[3]) + '</div></div>';
     }).join('');
 
@@ -215,7 +214,7 @@
       return '<button type="button" class="irow" data-issue="' + i.id + '"><span>' + esc(i.label) + (i.flag && dilShift ? ' <span class="flag" title="See the note below">*</span>' : '') + '</span><span class="bar"><i style="width:' + (c / max * 100) + '%"></i></span><span class="num">' + n(c) + ' <span class="pct">' + pct(c, o.visited) + '%</span></span><span class="num">' + (o.pen[i.id] ? n(o.pen[i.id]) : '<span class="pct">&ndash;</span>') + '</span></button>';
     }).join('');
     var notes = dilShift ? '<p class="note"><span class="flag">*</span> Check before relying on these two. Visits up to ' + dilShift.upTo + ' rated ' + dilShift.early('cc') + ' of classrooms and ' + dilShift.early('wc') + ' of washrooms "Dilapidated"; from ' + dilShift.from + ' the share was ' + dilShift.late('cc') + ' and ' + dilShift.late('wc') + '. Different schools were visited in each period, so this may be a change in how the form was filled, not an improvement. Leaving those ratings out, issues appear at ' + n(o.withoutDil) + ' schools instead of ' + n(o.withIssues) + '.</p>' : '';
-    if (o.sed) notes += '<p class="note">For ' + pl(o.sed, 'school', 'schools') + ', the department said the boundary wall is the School Education Department\'s responsibility, not the operator\'s.</p>';
+    if (o.sed) notes += '<p class="note">For ' + pl(o.sed, 'school', 'schools') + ', the department said infrastructure, such as major repairs or the boundary wall, is the responsibility of the School Education Department or the Government of Punjab, not the operator.</p>';
     $('inotes').innerHTML = notes;
     var top = list.filter(function (s) { return iss(s).length; }).sort(function (a, b) { return iss(b).length - iss(a).length || a.n.localeCompare(b.n); }).slice(0, 10);
     $('top').innerHTML = top.map(function (s) {
@@ -432,7 +431,7 @@
 
   function renderAll(fit) {
     var list = scoped(), o = summarise(list);
-    fitScope();
+    nameForPdf();
     $('f-clear').hidden = !state.district && !hasDates();
     renderTopbar(list);
     renderSummary(o);
@@ -531,7 +530,6 @@
     measureLinks();
     var sticky = getComputedStyle(bar).position === 'sticky';
     document.documentElement.style.scrollPaddingTop = (banner.offsetHeight + (sticky ? bar.offsetHeight : 0) + 12) + 'px';
-    fitScope();
   }
   setScrollOffset();
   var offsetWatcher = new ResizeObserver(setScrollOffset);
@@ -585,7 +583,7 @@
   }
 
   map.fitBounds(PUNJAB);
-  fitScope();
+  nameForPdf();
   $('f-clear').hidden = !state.district && !hasDates();
   renderHint();
   load();

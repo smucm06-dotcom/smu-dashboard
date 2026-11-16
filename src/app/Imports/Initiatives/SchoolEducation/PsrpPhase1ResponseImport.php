@@ -15,16 +15,18 @@ class PsrpPhase1ResponseImport implements InitiativeFileImport
 
     private const MAX_ROWS = 100000;
 
-    // Every column of the department's file: Sr, EMIS Code, District, SMU Visit Date,
-    // Analysis Report Remarks, PSPR-PEF Response Date, PSPR-PEF Response.
+    // Every column of the department's file: Sr., EMIS, District, School Name, SMU Audit Report Date,
+    // PEF Response Date, Remarks of SMU, Response of PEF. The earlier file's headings still work
+    // (SMU Visit Date, PSPR-PEF Response Date, Analysis Report Remarks, PSPR-PEF Response).
     private const COLUMNS = [
         'source_sr' => ['sr', 'sr no', 's no', 'sno', 'serial', 'serial no'],
         'emis_code' => ['emis code', 'emis', 'emis no', 'emis number'],
         'district' => ['district', 'district name'],
-        'visit_date' => ['smu visit date', 'visit date'],
-        'sent_remarks' => ['analysis report remarks', 'report remarks', 'remarks'],
-        'responded_at' => ['pspr pef response date', 'response date', 'reply date'],
-        'response' => ['pspr pef response', 'department response', 'response', 'reply'],
+        'school_name' => ['school name', 'name of school'],
+        'audit_report_date' => ['smu audit report date', 'audit report date', 'smu visit date', 'visit date'],
+        'responded_at' => ['pef response date', 'pspr pef response date', 'response date', 'reply date'],
+        'sent_remarks' => ['remarks of smu', 'smu remarks', 'analysis report remarks', 'report remarks', 'remarks'],
+        'response' => ['response of pef', 'pef response', 'pspr pef response', 'department response', 'response', 'reply'],
     ];
 
     public function __construct(private SpreadsheetReader $reader)
@@ -51,10 +53,11 @@ class PsrpPhase1ResponseImport implements InitiativeFileImport
                 'source_sr' => is_numeric($row['source_sr'] ?? null) && (float) $row['source_sr'] >= 0 ? (int) $row['source_sr'] : null,
                 'emis_code' => $emis,
                 'district' => $this->cleanText($row['district'] ?? null, 100),
-                'visit_date' => $this->date($row['visit_date'] ?? null),
-                'sent_remarks' => $this->cleanText($row['sent_remarks'] ?? null),
+                'school_name' => $this->cleanText($row['school_name'] ?? null, 255),
+                'audit_report_date' => $this->date($row['audit_report_date'] ?? null),
                 'responded_at' => $this->date($row['responded_at'] ?? null),
-                'response' => $this->cleanText($row['response'] ?? null) ?? '',
+                'sent_remarks' => $this->textOrBlank($row['sent_remarks'] ?? null),
+                'response' => $this->textOrBlank($row['response'] ?? null) ?? '',
             ];
         }
 
@@ -77,8 +80,16 @@ class PsrpPhase1ResponseImport implements InitiativeFileImport
         }
     }
 
+    // The newer file writes "—" where there is no reply or remark, as the earlier one wrote "-".
+    private function textOrBlank(mixed $value): ?string
+    {
+        $text = $this->cleanText($value);
+
+        return $text === null || preg_match('/^[\p{Pd}\s]+$/u', $text) === 1 ? null : $text;
+    }
+
     private function missingHeadingsMessage(): string
     {
-        return 'The column headings could not be found. The file needs an EMIS column and a response column, such as "PSPR-PEF Response".';
+        return 'The column headings could not be found. The file needs an EMIS column and a response column, such as "Response of PEF".';
     }
 }
