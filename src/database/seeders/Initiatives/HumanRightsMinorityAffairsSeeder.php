@@ -19,20 +19,20 @@ class HumanRightsMinorityAffairsSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => "Chief Minister's Minority Development Program",
-                    'table_name' => 'hrma_minority_development_program',
-                ],
+                // [
+                //     'name' => "Chief Minister's Minority Development Program",
+                //     'table_name' => 'hrma_minority_development_program',
+                // ],
 
-                [
-                    'name' => "Chief Minister's Minority Development Programme (Phase-II)",
-                    'table_name' => 'hrma_minority_development_phase_2',
-                ],
+                // [
+                //     'name' => "Chief Minister's Minority Development Programme (Phase-II)",
+                //     'table_name' => 'hrma_minority_development_phase_2',
+                // ],
 
-                [
-                    'name' => "Chief Minister’s Minority Card Scheme",
-                    'table_name' => 'hrma_minority_card_scheme',
-                ],
+                // [
+                //     'name' => "Chief Minister’s Minority Card Scheme",
+                //     'table_name' => 'hrma_minority_card_scheme',
+                // ],
 
             ];
 

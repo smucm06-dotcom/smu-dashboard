@@ -1,5 +1,7 @@
 <?php
 
+use App\Imports\Initiatives\LocalGovernment\UcMcListImport;
+use App\Imports\Initiatives\LocalGovernment\UcMcResponseImport;
 use App\Imports\Initiatives\SchoolEducation\AdditionalClassroomResponseImport;
 use App\Imports\Initiatives\SchoolEducation\AdditionalClassroomSchoolListImport;
 use App\Imports\Initiatives\SchoolEducation\PsrpPhase1ResponseImport;
@@ -33,5 +35,9 @@ return [
     'punjab_schools_meal_program' => [
         InitiativeFile::TYPE_DEPARTMENT_LIST => SchoolMealSchoolListImport::class,
         InitiativeFile::TYPE_DEPARTMENT_RESPONSE => SchoolMealResponseImport::class,
+    ],
+    'lgcd_uc_mc_office_service_delivery' => [
+        InitiativeFile::TYPE_DEPARTMENT_LIST => UcMcListImport::class,
+        InitiativeFile::TYPE_DEPARTMENT_RESPONSE => UcMcResponseImport::class,
     ],
 ];

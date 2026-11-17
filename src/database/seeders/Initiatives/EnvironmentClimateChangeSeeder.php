@@ -19,25 +19,25 @@ class EnvironmentClimateChangeSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'EPA: Up gradation, Restructuring, Revamping and Automation',
-                    'table_name' => 'ecc_epa_upgradation_restructuring',
-                ],
+                // [
+                //     'name' => 'EPA: Up gradation, Restructuring, Revamping and Automation',
+                //     'table_name' => 'ecc_epa_upgradation_restructuring',
+                // ],
 
-                [
-                    'name' => 'CM Punjab Green Credit Program',
-                    'table_name' => 'ecc_cm_punjab_green_credit_program',
-                ],
+                // [
+                //     'name' => 'CM Punjab Green Credit Program',
+                //     'table_name' => 'ecc_cm_punjab_green_credit_program',
+                // ],
 
-                [
-                    'name' => 'Punjab Smog Mitigation And Response Initiative – Air Safe',
-                    'table_name' => 'ecc_punjab_smog_mitigation_air_safe',
-                ],
+                // [
+                //     'name' => 'Punjab Smog Mitigation And Response Initiative – Air Safe',
+                //     'table_name' => 'ecc_punjab_smog_mitigation_air_safe',
+                // ],
 
-                [
-                    'name' => 'CM Punjab Climate Leadership Development Internship Program (Phase-II)',
-                    'table_name' => 'ecc_climate_leadership_internship_phase_2',
-                ],
+                // [
+                //     'name' => 'CM Punjab Climate Leadership Development Internship Program (Phase-II)',
+                //     'table_name' => 'ecc_climate_leadership_internship_phase_2',
+                // ],
 
             ];
 

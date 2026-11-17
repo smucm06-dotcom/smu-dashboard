@@ -25,13 +25,15 @@ class DepartmentController extends Controller
 
     public function show(Department $department)
     {
-        // Inactive initiatives are listed too. The page marks them as inactive.
+        // Only active initiatives are listed. Every initiative starts inactive
+        // (the migration's default) until it is switched on.
         $initiatives = $department->initiatives()
+            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
         $totalInitiatives = $department->initiatives()->count();
-        $activeInitiatives = $initiatives->where('is_active', true)->count();
+        $activeInitiatives = $initiatives->count();
 
         $topbar = [
             'title' => $department->name,

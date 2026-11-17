@@ -19,10 +19,10 @@ class LabourHumanResourceSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Maryam Nawaz Social Security Ration Card for the Secured Workers',
-                    'table_name' => 'lhr_social_security_ration_card',
-                ],
+                // [
+                //     'name' => 'Maryam Nawaz Social Security Ration Card for the Secured Workers',
+                //     'table_name' => 'lhr_social_security_ration_card',
+                // ],
 
             ];
 

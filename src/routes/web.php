@@ -9,6 +9,7 @@ use App\Http\Controllers\Initiatives\SchoolEducation\AdditionalClassroomsControl
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase1Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase2Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\SchoolMealProgramController;
+use App\Http\Controllers\Initiatives\LocalGovernment\UcMcOfficeServiceDeliveryController;
 use App\Http\Controllers\Initiatives\SpecialEducation\SpecialEducationInstitutesController;
 // Login routes
 Route::get('/', [AuthController::class, 'showLogin'])
@@ -106,6 +107,19 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/initiatives/{initiative}/school-meal/import', [SchoolMealProgramController::class, 'import'])
     ->name('initiatives.school-meal.import');
+
+    // UC MC Office Service Delivery (Local Government & Community Development)
+    Route::get('/initiatives/{initiative}/uc-mc-office-service-delivery/data', [UcMcOfficeServiceDeliveryController::class, 'data'])
+    ->name('initiatives.uc-mc-office-service-delivery.data');
+
+    Route::post('/initiatives/{initiative}/uc-mc-office-service-delivery/map-download', [UcMcOfficeServiceDeliveryController::class, 'mapDownload'])
+    ->name('initiatives.uc-mc-office-service-delivery.map-download');
+
+    Route::get('/initiatives/{initiative}/uc-mc-office-service-delivery/export', [UcMcOfficeServiceDeliveryController::class, 'export'])
+    ->name('initiatives.uc-mc-office-service-delivery.export');
+
+    Route::post('/initiatives/{initiative}/uc-mc-office-service-delivery/import', [UcMcOfficeServiceDeliveryController::class, 'import'])
+    ->name('initiatives.uc-mc-office-service-delivery.import');
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])

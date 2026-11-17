@@ -19,35 +19,35 @@ class SportsYouthAffairsSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Chief Minister Khelta Punjab',
-                    'table_name' => 'sya_cm_khelta_punjab',
-                ],
+                // [
+                //     'name' => 'Chief Minister Khelta Punjab',
+                //     'table_name' => 'sya_cm_khelta_punjab',
+                // ],
 
-                [
-                    'name' => 'Revival of Sports Across Punjab',
-                    'table_name' => 'sya_revival_sports_punjab',
-                ],
+                // [
+                //     'name' => 'Revival of Sports Across Punjab',
+                //     'table_name' => 'sya_revival_sports_punjab',
+                // ],
 
-                [
-                    'name' => 'Feasibility and Seed Money for the Project, Maryam Nawaz Sports City Lahore',
-                    'table_name' => 'sya_maryam_nawaz_sports_city_lahore',
-                ],
+                // [
+                //     'name' => 'Feasibility and Seed Money for the Project, Maryam Nawaz Sports City Lahore',
+                //     'table_name' => 'sya_maryam_nawaz_sports_city_lahore',
+                // ],
 
-                [
-                    'name' => 'Chief Minister’s Youth Engagement Programme',
-                    'table_name' => 'sya_cm_youth_engagement_programme',
-                ],
+                // [
+                //     'name' => 'Chief Minister’s Youth Engagement Programme',
+                //     'table_name' => 'sya_cm_youth_engagement_programme',
+                // ],
 
-                [
-                    'name' => 'Program for Rehabilitation of Existing Sports Facilities',
-                    'table_name' => 'sya_rehabilitation_sports_facilities',
-                ],
+                // [
+                //     'name' => 'Program for Rehabilitation of Existing Sports Facilities',
+                //     'table_name' => 'sya_rehabilitation_sports_facilities',
+                // ],
 
-                [
-                    'name' => 'Chief Minister Internship Program',
-                    'table_name' => 'sya_cm_internship_program',
-                ],
+                // [
+                //     'name' => 'Chief Minister Internship Program',
+                //     'table_name' => 'sya_cm_internship_program',
+                // ],
 
             ];
 
