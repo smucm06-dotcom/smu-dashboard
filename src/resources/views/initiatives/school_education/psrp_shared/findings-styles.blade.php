@@ -251,6 +251,21 @@ body { background: #eef5f0; }
 .psrp-pdf-btn:focus-visible { outline: 2px solid #c9a24a; outline-offset: 2px; }
 .psrp-pdf-btn:disabled { opacity: .75; cursor: progress; }
 .psrp-pdf-btn svg { width: 16px; height: 16px; flex: none; }
+/* The same button beside a section's heading exports that section only ("How districts compare").
+   Inside the findings, buttons otherwise take the text's font and colour. */
+.psrp-findings .sec-h-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.psrp-findings .psrp-pdf-btn { font: 600 13px/1.2 "Inter", "Segoe UI", system-ui, sans-serif; color: #fff; }
+
+/* The banner's cards are numbered 1, 2, 3 and on, on every initiative page. */
+.topbar-stats-grid { counter-reset: psrp-card; }
+.topbar-stat-card { counter-increment: psrp-card; }
+.topbar-stat-label { display: flex; align-items: center; gap: 7px; }
+.topbar-stat-label::before { content: counter(psrp-card); flex: none; width: 19px; height: 19px; border-radius: 50%; background: #a9ecc8; color: #063d28; font-size: 11px; font-weight: 800; letter-spacing: 0; display: inline-flex; align-items: center; justify-content: center; }
+/* On phones the cards are narrow, so the number sits above the label. */
+@media (max-width: 600px) {
+  .topbar-stat-label { display: block; }
+  .topbar-stat-label::before { display: flex; width: 14px; height: 14px; font-size: 8.5px; margin-bottom: 3px; }
+}
 .psrp-findings .fg { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .psrp-findings .fb-meta { display: flex; align-items: center; flex: 1 1 auto; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
 .psrp-findings .ctl { max-width: 100%; }
