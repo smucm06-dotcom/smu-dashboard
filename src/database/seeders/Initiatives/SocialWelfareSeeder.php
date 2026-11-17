@@ -19,40 +19,40 @@ class SocialWelfareSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Establishment of Family Support and Mediation Complexes (FSMCs) "Sukh Da Vehra" in Punjab',
-                    'table_name' => 'sw_family_support_mediation_sukh_da_vehra',
-                ],
+                // [
+                //     'name' => 'Establishment of Family Support and Mediation Complexes (FSMCs) "Sukh Da Vehra" in Punjab',
+                //     'table_name' => 'sw_family_support_mediation_sukh_da_vehra',
+                // ],
 
-                [
-                    'name' => 'Up-gradation of Sanatzars across Punjab',
-                    'table_name' => 'sw_upgradation_sanatzars_punjab',
-                ],
+                // [
+                //     'name' => 'Up-gradation of Sanatzars across Punjab',
+                //     'table_name' => 'sw_upgradation_sanatzars_punjab',
+                // ],
 
-                [
-                    'name' => 'Establishment of Old Age Home (Aafiat) at Gujranwala, DG Khan, Lahore and Operationalization of Old Age Homes at Muzaffargarh, Sargodha and Bahawalpur',
-                    'table_name' => 'sw_old_age_homes_aafiat',
-                ],
+                // [
+                //     'name' => 'Establishment of Old Age Home (Aafiat) at Gujranwala, DG Khan, Lahore and Operationalization of Old Age Homes at Muzaffargarh, Sargodha and Bahawalpur',
+                //     'table_name' => 'sw_old_age_homes_aafiat',
+                // ],
 
-                [
-                    'name' => 'Punjab Dhee Rani Programme',
-                    'table_name' => 'sw_punjab_dhee_rani_programme',
-                ],
+                // [
+                //     'name' => 'Punjab Dhee Rani Programme',
+                //     'table_name' => 'sw_punjab_dhee_rani_programme',
+                // ],
 
-                [
-                    'name' => 'Assistive Devices and Wheel Chair (ADWC) Program',
-                    'table_name' => 'sw_assistive_devices_wheelchair_program',
-                ],
+                // [
+                //     'name' => 'Assistive Devices and Wheel Chair (ADWC) Program',
+                //     'table_name' => 'sw_assistive_devices_wheelchair_program',
+                // ],
 
-                [
-                    'name' => 'Chief Minister’s Himmat Card Program',
-                    'table_name' => 'sw_cm_himmat_card_program',
-                ],
+                // [
+                //     'name' => 'Chief Minister’s Himmat Card Program',
+                //     'table_name' => 'sw_cm_himmat_card_program',
+                // ],
 
-                [
-                    'name' => 'Flood Relief 2025',
-                    'table_name' => 'sw_flood_relief_2025',
-                ],
+                // [
+                //     'name' => 'Flood Relief 2025',
+                //     'table_name' => 'sw_flood_relief_2025',
+                // ],
 
             ];
 

@@ -19,45 +19,45 @@ class IndustriesCommerceInvestmentSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Establishment of Garment cities in Punjab',
-                    'table_name' => 'ind_garment_cities_punjab',
-                ],
+                // [
+                //     'name' => 'Establishment of Garment cities in Punjab',
+                //     'table_name' => 'ind_garment_cities_punjab',
+                // ],
 
-                [
-                    'name' => 'CM Punjab Asaan Karobar',
-                    'table_name' => 'ind_cm_punjab_asaan_karobar',
-                ],
+                // [
+                //     'name' => 'CM Punjab Asaan Karobar',
+                //     'table_name' => 'ind_cm_punjab_asaan_karobar',
+                // ],
 
-                [
-                    'name' => 'CM Punjab Asaan Karobar Finance- Center',
-                    'table_name' => 'ind_asaan_karobar_finance_center',
-                ],
+                // [
+                //     'name' => 'CM Punjab Asaan Karobar Finance- Center',
+                //     'table_name' => 'ind_asaan_karobar_finance_center',
+                // ],
 
-                [
-                    'name' => 'CM Punjab Asaan Karobar Finance-South',
-                    'table_name' => 'ind_asaan_karobar_finance_south',
-                ],
+                // [
+                //     'name' => 'CM Punjab Asaan Karobar Finance-South',
+                //     'table_name' => 'ind_asaan_karobar_finance_south',
+                // ],
 
-                [
-                    'name' => 'CM Punjab Asaan Karobar Finance- North',
-                    'table_name' => 'ind_asaan_karobar_finance_north',
-                ],
+                // [
+                //     'name' => 'CM Punjab Asaan Karobar Finance- North',
+                //     'table_name' => 'ind_asaan_karobar_finance_north',
+                // ],
 
-                [
-                    'name' => 'CM Punjab Asaan Export Finance for SMEs',
-                    'table_name' => 'ind_asaan_export_finance_smes',
-                ],
+                // [
+                //     'name' => 'CM Punjab Asaan Export Finance for SMEs',
+                //     'table_name' => 'ind_asaan_export_finance_smes',
+                // ],
 
-                [
-                    'name' => 'CM Punjab Asaan Karobar finance',
-                    'table_name' => 'ind_asaan_karobar_finance',
-                ],
+                // [
+                //     'name' => 'CM Punjab Asaan Karobar finance',
+                //     'table_name' => 'ind_asaan_karobar_finance',
+                // ],
 
-                [
-                    'name' => 'CM Punjab Asaan Karobar card',
-                    'table_name' => 'ind_asaan_karobar_card',
-                ],
+                // [
+                //     'name' => 'CM Punjab Asaan Karobar card',
+                //     'table_name' => 'ind_asaan_karobar_card',
+                // ],
 
             ];
 

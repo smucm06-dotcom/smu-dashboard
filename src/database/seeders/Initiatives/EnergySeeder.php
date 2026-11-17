@@ -19,20 +19,20 @@ class EnergySeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => "Chief Minister's Punjab Free Solar Panel Scheme",
-                    'table_name' => 'ene_punjab_free_solar_panel_scheme',
-                ],
+                // [
+                //     'name' => "Chief Minister's Punjab Free Solar Panel Scheme",
+                //     'table_name' => 'ene_punjab_free_solar_panel_scheme',
+                // ],
 
-                [
-                    'name' => 'Chief Minister Initiative for Promotion of Renewable Energy Technologies',
-                    'table_name' => 'ene_renewable_energy_technologies',
-                ],
+                // [
+                //     'name' => 'Chief Minister Initiative for Promotion of Renewable Energy Technologies',
+                //     'table_name' => 'ene_renewable_energy_technologies',
+                // ],
 
-                [
-                    'name' => 'Chief Minister Fund for Indigenization of Solar Power Equipment (PC-II)',
-                    'table_name' => 'ene_solar_power_equipment_indigenization_pc2',
-                ],
+                // [
+                //     'name' => 'Chief Minister Fund for Indigenization of Solar Power Equipment (PC-II)',
+                //     'table_name' => 'ene_solar_power_equipment_indigenization_pc2',
+                // ],
 
             ];
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Initiatives\LocalGovernment\UcMcOfficeServiceDeliveryController;
 use App\Http\Controllers\Initiatives\SchoolEducation\AdditionalClassroomsController;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase1Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase2Controller;
@@ -12,4 +13,5 @@ return [
     'special_education_institutes' => SpecialEducationInstitutesController::class,
     'additional_classrooms' => AdditionalClassroomsController::class,
     'punjab_schools_meal_program' => SchoolMealProgramController::class,
+    'lgcd_uc_mc_office_service_delivery' => UcMcOfficeServiceDeliveryController::class,
 ];
