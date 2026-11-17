@@ -18,6 +18,18 @@ class SpreadsheetReader
 {
     private const PREVIEW_ROWS = 10;
 
+    // Off by default: every run of spaces and line breaks in a cell becomes one space. A page that
+    // reads paragraphs (UC MC's department responses) asks for a reader that keeps the line breaks.
+    private bool $keepLineBreaks = false;
+
+    public function keepingLineBreaks(): static
+    {
+        $reader = clone $this;
+        $reader->keepLineBreaks = true;
+
+        return $reader;
+    }
+
     // Returns the data sheet's non-empty rows, keyed by their row number in the file.
     // $isWanted receives a sheet's first rows, for callers that know what their data looks like.
     public function read(string $path, string $extension, int $maxRows, ?callable $isWanted = null): array
@@ -194,6 +206,14 @@ class SpreadsheetReader
 
         if (! mb_check_encoding($value, 'UTF-8')) {
             $value = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+        }
+
+        if ($this->keepLineBreaks) {
+            // Spaces within a line become one, each line is trimmed, and blank lines go.
+            $lines = preg_split('/\R/u', $value) ?: [$value];
+            $lines = array_map(fn ($line) => trim((string) preg_replace('/[^\S\r\n]+|\x{00A0}+/u', ' ', $line)), $lines);
+
+            return implode("\n", array_values(array_filter($lines, fn ($line) => $line !== '')));
         }
 
         return trim((string) preg_replace('/[\s\x{00A0}]+/u', ' ', $value));

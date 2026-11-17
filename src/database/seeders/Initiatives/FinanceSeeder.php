@@ -19,10 +19,10 @@ class FinanceSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Acquisition of Land and Shifting of Utilities',
-                    'table_name' => 'fin_acquisition_land_shifting_utilities',
-                ],
+                // [
+                //     'name' => 'Acquisition of Land and Shifting of Utilities',
+                //     'table_name' => 'fin_acquisition_land_shifting_utilities',
+                // ],
 
             ];
 

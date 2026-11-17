@@ -19,20 +19,20 @@ class PoliceSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Safe City Kacha Area',
-                    'table_name' => 'pol_safe_city_kacha_area',
-                ],
+                // [
+                //     'name' => 'Safe City Kacha Area',
+                //     'table_name' => 'pol_safe_city_kacha_area',
+                // ],
 
-                [
-                    'name' => 'EXPANSION OF IPNV SITES OF LAHORE',
-                    'table_name' => 'pol_expansion_ipnv_sites_lahore',
-                ],
+                // [
+                //     'name' => 'EXPANSION OF IPNV SITES OF LAHORE',
+                //     'table_name' => 'pol_expansion_ipnv_sites_lahore',
+                // ],
 
-                [
-                    'name' => 'Chief Minister Safe Cities Program',
-                    'table_name' => 'pol_cm_safe_cities_program',
-                ],
+                // [
+                //     'name' => 'Chief Minister Safe Cities Program',
+                //     'table_name' => 'pol_cm_safe_cities_program',
+                // ],
 
             ];
 

@@ -19,10 +19,10 @@ class MinesMineralsSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Mines and Minerals Ration Card Scheme',
-                    'table_name' => 'mm_mines_minerals_ration_card',
-                ],
+                // [
+                //     'name' => 'Mines and Minerals Ration Card Scheme',
+                //     'table_name' => 'mm_mines_minerals_ration_card',
+                // ],
 
             ];
 

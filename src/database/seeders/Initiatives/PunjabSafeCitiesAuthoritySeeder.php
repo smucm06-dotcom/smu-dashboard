@@ -19,25 +19,25 @@ class PunjabSafeCitiesAuthoritySeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Punjab Smart Safe Cities Program',
-                    'table_name' => 'psca_punjab_smart_safe_cities_program',
-                ],
+                // [
+                //     'name' => 'Punjab Smart Safe Cities Program',
+                //     'table_name' => 'psca_punjab_smart_safe_cities_program',
+                // ],
 
-                [
-                    'name' => 'CM Maryam Nawaz Free Wifi Initiative',
-                    'table_name' => 'psca_cm_maryam_nawaz_free_wifi',
-                ],
+                // [
+                //     'name' => 'CM Maryam Nawaz Free Wifi Initiative',
+                //     'table_name' => 'psca_cm_maryam_nawaz_free_wifi',
+                // ],
 
-                [
-                    'name' => 'Virtual Women Police Station',
-                    'table_name' => 'psca_virtual_women_police_station',
-                ],
+                // [
+                //     'name' => 'Virtual Women Police Station',
+                //     'table_name' => 'psca_virtual_women_police_station',
+                // ],
 
-                [
-                    'name' => 'Virtual Center for Child Safety',
-                    'table_name' => 'psca_virtual_center_child_safety',
-                ],
+                // [
+                //     'name' => 'Virtual Center for Child Safety',
+                //     'table_name' => 'psca_virtual_center_child_safety',
+                // ],
 
             ];
 

@@ -53,6 +53,34 @@ abstract class PsrpVisitImport
     // The model of the table the visits are saved in.
     abstract protected function model(): string;
 
+    // The columns a re-uploaded visit is matched on. Together they are the table's unique key.
+    // Most pages match on EMIS code and visit date; a page without EMIS codes names its own.
+    protected function keyColumns(): array
+    {
+        return self::KEY_COLUMNS;
+    }
+
+    // For a file that can hold several rows with the same key (UC MC's visits share Timestamp and
+    // Email when one form covered two UCs): the last key column, which numbers those rows 1, 2, 3,
+    // so every row is kept. It is not a column of the file. Without one, a repeated key is reported
+    // as a problem.
+    protected function repeatColumn(): ?string
+    {
+        return null;
+    }
+
+    // A row's key, as text, from its key columns.
+    protected function keyOf(array $record): string
+    {
+        return implode('|', array_map(fn ($column) => $record[$column] ?? '', $this->keyColumns()));
+    }
+
+    protected function headingsNotFoundMessage(): string
+    {
+        return 'The column headings could not be found. The file needs an EMIS column (such as "EMIS Code") '
+            .'and a visit date column (such as "Timestamp" or "Visit date").';
+    }
+
     // For a phase whose file has dates known to be mistyped.
     protected function correctedDate(Carbon $date): Carbon
     {
@@ -90,8 +118,7 @@ abstract class PsrpVisitImport
 
         if ($header === null) {
             return [
-                'failure' => 'The column headings could not be found. The file needs an EMIS column (such as "EMIS Code") '
-                    .'and a visit date column (such as "Timestamp" or "Visit date").',
+                'failure' => $this->headingsNotFoundMessage(),
                 'ignoredColumns' => array_values(array_filter(array_map(
                     fn ($heading) => $this->displayValue($heading),
                     reset($rows)
@@ -106,6 +133,8 @@ abstract class PsrpVisitImport
 
         $records = [];
         $rowOfKey = [];
+        $repeats = [];
+        $repeatColumn = $this->repeatColumn();
         $problems = [];
         $badRows = 0;
 
@@ -123,8 +152,11 @@ abstract class PsrpVisitImport
                 }
             }
 
-            if ($rowProblems === []) {
-                $key = $record['emis_code'].'|'.$record['visited_at'];
+            if ($rowProblems === [] && $repeatColumn !== null) {
+                // Rows sharing the key without its number are numbered once every row is read.
+                $repeats[$this->keyOf([$repeatColumn => ''] + $record)][] = $record;
+            } elseif ($rowProblems === []) {
+                $key = $this->keyOf($record);
 
                 if (isset($rowOfKey[$key])) {
                     $rowProblems[] = $this->problem(
@@ -156,7 +188,24 @@ abstract class PsrpVisitImport
             ];
         }
 
-        [$records, $columns] = $this->withExtraSheets($records, array_values($header['columns']), $path, $extension);
+        // Rows sharing a key are numbered 1, 2, 3 in the order of their values, not their place in the
+        // file, so a file sorted another way (such as the records CSV) still matches the same rows.
+        foreach ($repeats as $rows) {
+            usort($rows, fn (array $a, array $b) => strcmp(implode("\x1F", $a), implode("\x1F", $b)));
+
+            foreach ($rows as $index => $record) {
+                $record[$repeatColumn] = (string) ($index + 1);
+                $records[$this->keyOf($record)] = $record;
+            }
+        }
+
+        $fileColumns = array_values($header['columns']);
+        [$records, $columns] = $this->withExtraSheets(
+            $records,
+            $repeatColumn === null ? $fileColumns : [...$fileColumns, $repeatColumn],
+            $path,
+            $extension
+        );
 
         return $this->save($records, $columns) + [
             'datesCorrected' => $this->correctedDates,
@@ -193,7 +242,7 @@ abstract class PsrpVisitImport
                 }
             }
 
-            if (array_diff(self::KEY_COLUMNS, $columns) === []) {
+            if (array_diff($this->keyColumns(), [$this->repeatColumn()], $columns) === []) {
                 return compact('number', 'columns', 'ignored');
             }
         }
@@ -589,7 +638,7 @@ abstract class PsrpVisitImport
 
         DB::transaction(function () use ($changes, $columns) {
             foreach (array_chunk($changes, 500) as $chunk) {
-                $this->model()::upsert($chunk, self::KEY_COLUMNS, array_values(array_diff($columns, self::KEY_COLUMNS)));
+                $this->model()::upsert($chunk, $this->keyColumns(), array_values(array_diff($columns, $this->keyColumns())));
             }
         });
 
@@ -604,9 +653,11 @@ abstract class PsrpVisitImport
     private function existingRecords(array $records, array $columns): array
     {
         $existing = [];
+        // Saved rows are looked up by the first key column (EMIS code on most pages).
+        $lookup = $this->keyColumns()[0];
 
-        foreach (array_chunk(array_unique(array_column($records, 'emis_code')), 1000) as $emisCodes) {
-            $rows = $this->model()::query()->toBase()->whereIn('emis_code', $emisCodes)->get($columns);
+        foreach (array_chunk(array_unique(array_column($records, $lookup)), 1000) as $lookupValues) {
+            $rows = $this->model()::query()->toBase()->whereIn($lookup, $lookupValues)->get($columns);
 
             foreach ($rows as $row) {
                 $values = [];
@@ -621,7 +672,7 @@ abstract class PsrpVisitImport
                     };
                 }
 
-                $existing[$values['emis_code'].'|'.$values['visited_at']] = $values;
+                $existing[$this->keyOf($values)] = $values;
             }
         }
 
