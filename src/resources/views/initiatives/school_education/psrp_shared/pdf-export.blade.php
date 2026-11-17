@@ -8,13 +8,19 @@
     A page using it puts this button where it should show (the end of the breadcrumb row); its
     look is in the shared findings styles:
     <button type="button" class="psrp-pdf-btn" id="pdfExport" data-pdf-skip data-pdf-name="...">…</button>
+
+    A section can also have its own button, which exports that section only ("How districts
+    compare"), at the width its tables need so no column is cut off. data-pdf-section names the
+    section's id; the file is named like the page's, with the section's heading:
+    <button type="button" class="psrp-pdf-btn" data-pdf-section="districts" data-pdf-skip>…</button>
 --}}
 <script>
 (function () {
   'use strict';
 
   var button = document.getElementById('pdfExport');
-  if (!button) return;
+  var sectionButtons = Array.prototype.slice.call(document.querySelectorAll('[data-pdf-section]'));
+  if (!button && !sectionButtons.length) return;
 
   var SVG_NS = 'http://www.w3.org/2000/svg';
   // Styles that change nothing in a still picture, or that would change its layout. ("will-change"
@@ -22,8 +28,7 @@
   var SKIP = /^(--|transition|animation|container|content-visibility|contain-intrinsic|cursor|pointer-events|user-select|-webkit-user-select|caret-color|scroll-|overscroll|touch-action|view-transition|-webkit-tap-highlight)/;
   var SCALE = 2;            // two image pixels per screen pixel, so text stays sharp
   var MAX_PAGE = 14000;     // tallest PDF page in screen pixels; longer pages are split between sections
-  var label = button.querySelector('span') || button;
-  var idleText = label.textContent;
+  var SECTION_MARGIN = 24;  // space around a section exported on its own, in screen pixels
 
   /* Each element's default style, from an empty page, so only what differs is written. */
   var sandbox = null, defaults = {};
@@ -235,30 +240,59 @@
     return new Blob(parts, { type: 'application/pdf' });
   }
 
-  function fileName() {
+  function fileName(part) {
     // What the filters show, which each page's script puts on the button ("Kot Addu, visits from ...").
-    var what = button.getAttribute('data-pdf-what') || '';
+    var what = button ? button.getAttribute('data-pdf-what') || '' : '';
     var d = new Date(), date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    var name = [button.getAttribute('data-pdf-name') || document.title, what, date].filter(Boolean).join(' - ');
+    var name = [(button && button.getAttribute('data-pdf-name')) || document.title, part, what, date].filter(Boolean).join(' - ');
     return name.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180) + '.pdf';
   }
 
-  function makePdf() {
-    var root = document.querySelector('.app-main') || document.body;
-    var rect = root.getBoundingClientRect(), width = Math.ceil(rect.width), height = Math.ceil(rect.height);
+  /* A section exported on its own is laid out, for a moment, as wide as its tables need, so a table
+     that scrolls sideways on a narrow screen comes out whole. Returns what puts it back. */
+  function widen(section) {
+    var extra = 0;
+    section.querySelectorAll('.tablewrap').forEach(function (wrap) { extra = Math.max(extra, wrap.scrollWidth - wrap.clientWidth); });
+    if (extra <= 0) return function () {};
+    var width = Math.ceil(section.getBoundingClientRect().width + extra) + 'px';
+    var changed = [section].concat(Array.prototype.slice.call(section.querySelectorAll('.tablewrap')));
+    var saved = changed.map(function (el) { return el.getAttribute('style'); });
+    section.style.setProperty('width', width, 'important');
+    section.style.setProperty('max-width', 'none', 'important');
+    changed.slice(1).forEach(function (wrap) { wrap.style.setProperty('overflow', 'visible', 'important'); });
+    return function () {
+      changed.forEach(function (el, i) { if (saved[i] === null) el.removeAttribute('style'); else el.setAttribute('style', saved[i]); });
+    };
+  }
+
+  // The whole page (margin 0), or one section with a margin around it.
+  function makePdf(root, margin) {
     var background = getComputedStyle(document.body).backgroundColor;
     if (!background || background === 'rgba(0, 0, 0, 0)') background = '#ffffff';
-    var points = breakPoints(root, rect.top);
-    var jobs = [], pseudo = [];
+    var jobs = [], pseudo = [], width, height, points;
 
     return (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
-      var copy = copyOf(root, null, jobs, pseudo);
+      // Measured and copied in one go, while a section is widened, and put back straight after.
+      var restore = margin ? widen(root) : function () {};
+      var copy;
+      try {
+        var rect = root.getBoundingClientRect();
+        width = Math.ceil(rect.width);
+        height = Math.ceil(rect.height);
+        points = breakPoints(root, rect.top);
+        copy = copyOf(root, null, jobs, pseudo);
+      } finally {
+        restore();
+      }
       return Promise.all([fontFaces(), Promise.all(jobs)]).then(function (done) {
         // The page sits beside the sidebar on the screen; in the PDF it starts at the left edge.
         copy.style.margin = '0';
         copy.style.width = width + 'px';
         var holder = document.createElement('div');
-        holder.setAttribute('style', 'margin:0;width:' + width + 'px;height:' + height + 'px;background:' + background);
+        holder.setAttribute('style', 'margin:0;' + (margin ? 'padding:' + margin + 'px;' : '') + 'width:' + width + 'px;height:' + height + 'px;background:' + background);
+        width += margin * 2;
+        height += margin * 2;
+        points = points.map(function (y) { return y + margin; });
         var css = document.createElement('style');
         css.textContent = done[0] + '\n' + pseudo.join('\n');
         holder.appendChild(css);
@@ -280,12 +314,18 @@
     });
   }
 
-  button.addEventListener('click', function () {
-    if (button.disabled) return;
-    button.disabled = true;
+  // One export at a time, from whichever button was clicked. Each button's own text is kept from the start.
+  var busy = false;
+  var idleTexts = [button].concat(sectionButtons).filter(Boolean).map(function (b) { return [b, (b.querySelector('span') || b).textContent]; });
+  function run(clicked, root, margin, part) {
+    if (busy || clicked.disabled) return;
+    busy = true;
+    clicked.disabled = true;
+    var label = clicked.querySelector('span') || clicked;
+    var idleText = idleTexts.filter(function (t) { return t[0] === clicked; })[0][1];
     label.textContent = 'Preparing PDF…';
-    var name = fileName();
-    makePdf().then(function (blob) {
+    var name = fileName(part);
+    makePdf(root, margin).then(function (blob) {
       var link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = name;
@@ -298,7 +338,20 @@
       label.textContent = 'PDF failed, try again';
       setTimeout(function () { label.textContent = idleText; }, 4000);
     }).then(function () {
-      button.disabled = false;
+      busy = false;
+      clicked.disabled = false;
+    });
+  }
+
+  if (button) {
+    button.addEventListener('click', function () { run(button, document.querySelector('.app-main') || document.body, 0, ''); });
+  }
+  sectionButtons.forEach(function (sectionButton) {
+    sectionButton.addEventListener('click', function () {
+      var section = document.getElementById(sectionButton.getAttribute('data-pdf-section')) || sectionButton.closest('section');
+      if (!section) return;
+      var heading = section.querySelector('h2');
+      run(sectionButton, section, SECTION_MARGIN, heading ? heading.textContent.trim() : '');
     });
   });
 })();

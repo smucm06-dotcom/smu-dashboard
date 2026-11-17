@@ -18,17 +18,9 @@
 .psrp-tip { position: fixed; z-index: 2000; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); box-shadow: var(--shadow); padding: 6px 10px; font-size: 13px; line-height: 1.35; max-width: 280px; }
 .psrp-tip b { display: block; }
 
-/* The banner's four cards are the steps of the work, numbered as in the design, with arrows between
-   them where there is room. Only this page's banner. */
-.topbar-stats-grid { counter-reset: ucmc-step; }
-.topbar-stat-card { counter-increment: ucmc-step; position: relative; }
-.topbar-stat-label { display: flex; align-items: center; gap: 7px; }
-.topbar-stat-label::before { content: counter(ucmc-step); flex: none; width: 19px; height: 19px; border-radius: 50%; background: #a9ecc8; color: #063d28; font-size: 11px; font-weight: 800; letter-spacing: 0; display: inline-flex; align-items: center; justify-content: center; }
-/* On phones the cards are narrow, so the number sits above the label. */
-@media (max-width: 600px) {
-  .topbar-stat-label { display: block; }
-  .topbar-stat-label::before { display: flex; width: 14px; height: 14px; font-size: 8.5px; margin-bottom: 3px; }
-}
+/* The banner's four cards are the steps of the work, as in the design: numbered like every initiative
+   page's (shared findings styles), with arrows between them where there is room. Only this page's banner. */
+.topbar-stat-card { position: relative; }
 @media (min-width: 1200px) {
   .topbar-stats-grid { column-gap: 22px; }
   .topbar-stat-card + .topbar-stat-card::before { content: "\2192"; position: absolute; left: -16px; top: 50%; transform: translateY(-50%); color: #a9ecc8; font-weight: 700; font-size: 15px; line-height: 1; }

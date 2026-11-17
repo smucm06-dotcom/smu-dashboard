@@ -129,7 +129,17 @@
         </section>
 
         <section id="districts" aria-labelledby="h-districts">
-            <div class="sec-h"><h2 id="h-districts">How districts compare</h2><p>Click a district to focus the whole page on it. Click a column heading to sort.</p></div>
+            <div class="sec-h">
+                <div class="sec-h-row">
+                    <h2 id="h-districts">How districts compare</h2>
+                    {{-- This section only, as a PDF download (see psrp_shared/pdf-export) --}}
+                    <button type="button" class="psrp-pdf-btn" data-pdf-section="districts" data-pdf-skip title="Export only this section to PDF">
+                        <i data-lucide="file-down" aria-hidden="true"></i>
+                        <span>Export to PDF</span>
+                    </button>
+                </div>
+                <p>Click a district to focus the whole page on it. Click a column heading to sort.</p>
+            </div>
             <div class="insights" id="insights"></div>
             <div class="card tablewrap"><table class="dt dvt" id="dt"></table></div>
             <div class="card pad" style="margin-top:14px"><h3>By type of licensee</h3><div class="tablewrap"><table class="ct" id="ct"></table></div></div>
