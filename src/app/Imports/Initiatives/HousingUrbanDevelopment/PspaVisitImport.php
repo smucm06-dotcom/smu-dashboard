@@ -28,7 +28,8 @@ class PspaVisitImport extends PsrpVisitImport
         'total_taps' => ['label' => 'Total water taps', 'type' => 'integer', 'headings' => []],
         'functional_taps' => ['label' => 'Functional water taps', 'type' => 'integer', 'headings' => []],
         // The longest an Excel cell can be, well within the table's medium text.
-        'images' => ['label' => 'Images', 'type' => 'text', 'max' => 65535, 'headings' => ['photos', 'pictures']],
+        // "Images" in the earlier files.
+        'images' => ['label' => 'Image Path', 'type' => 'text', 'max' => 65535, 'headings' => ['images', 'image paths', 'photos', 'pictures']],
         'plant_unclean' => ['label' => 'Uncleanliness of filtration plant', 'type' => 'text', 'max' => 100, 'headings' => ['plant unclean']],
         'no_electricity' => ['label' => 'Unavailability of electricity', 'type' => 'text', 'max' => 100, 'headings' => ['no electricity']],
         'meter_disconnected' => ['label' => 'Electricity meter/connection disconnected', 'type' => 'text', 'max' => 100, 'headings' => ['meter disconnected']],
@@ -69,8 +70,9 @@ class PspaVisitImport extends PsrpVisitImport
         'direct_pole_connection' => ['label' => 'Electricity theft has been committed at the filtration plant by taking a direct connection from the electric pole.', 'type' => 'text', 'max' => 100, 'headings' => ['direct connection from pole']],
         'cooler_instead_of_taps' => ['label' => 'Water cooler has been installed at this filtration plant instead of water taps', 'type' => 'text', 'max' => 100, 'headings' => ['water cooler instead of taps']],
         // A coordinate that can't be used leaves the visit without a location, as on the other pages.
-        'latitude' => ['label' => 'lat', 'type' => 'decimal', 'limit' => 90, 'blanks' => self::NO_LOCATION_VALUES, 'headings' => ['latitude']],
-        'longitude' => ['label' => 'long', 'type' => 'decimal', 'limit' => 180, 'blanks' => self::NO_LOCATION_VALUES, 'headings' => ['longitude', 'lng', 'lon']],
+        // "lat" and "long" in the earlier files.
+        'latitude' => ['label' => 'Latitude', 'type' => 'decimal', 'limit' => 90, 'blanks' => self::NO_LOCATION_VALUES, 'headings' => ['lat']],
+        'longitude' => ['label' => 'Longitude', 'type' => 'decimal', 'limit' => 180, 'blanks' => self::NO_LOCATION_VALUES, 'headings' => ['long', 'lng', 'lon']],
     ];
 
     protected function columns(): array
