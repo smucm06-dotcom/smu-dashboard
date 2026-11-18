@@ -118,6 +118,12 @@ Route::middleware(['auth', 'account.active'])->group(function () {
             Route::get('/punjab-saaf-pani-authority/export', [PunjabSaafPaniAuthorityController::class, 'export'])
                 ->name('initiatives.punjab-saaf-pani-authority.export');
 
+            Route::get('/punjab-saaf-pani-authority/data', [PunjabSaafPaniAuthorityController::class, 'data'])
+                ->name('initiatives.punjab-saaf-pani-authority.data');
+
+            Route::post('/punjab-saaf-pani-authority/map-download', [PunjabSaafPaniAuthorityController::class, 'mapDownload'])
+                ->name('initiatives.punjab-saaf-pani-authority.map-download');
+
             // Uploading and deleting: admins only.
             Route::middleware('can:manage,initiative')->group(function () {
                 Route::post('/files', [InitiativeFileController::class, 'store'])
