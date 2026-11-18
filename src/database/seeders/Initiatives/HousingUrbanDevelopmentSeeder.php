@@ -19,6 +19,10 @@ class HousingUrbanDevelopmentSeeder extends Seeder
 
             $initiatives = [
 
+                [
+                    'name' => 'Punjab Saaf Pani Authority (PSPA)',
+                    'table_name' => 'punjab_saaf_pani_authority',
+                ],
                 // [
                 //     'name' => 'Chief Minister Lahore Development Program (WASA, 9 Zones)',
                 //     'table_name' => 'hudphe_lahore_development_wasa_9_zones',

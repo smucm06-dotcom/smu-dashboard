@@ -1,5 +1,7 @@
 <?php
 
+use App\Imports\Initiatives\HousingUrbanDevelopment\PspaPlantListImport;
+use App\Imports\Initiatives\HousingUrbanDevelopment\PspaResponseImport;
 use App\Imports\Initiatives\LocalGovernment\UcMcListImport;
 use App\Imports\Initiatives\LocalGovernment\UcMcResponseImport;
 use App\Imports\Initiatives\SchoolEducation\AdditionalClassroomResponseImport;
@@ -39,5 +41,9 @@ return [
     'lgcd_uc_mc_office_service_delivery' => [
         InitiativeFile::TYPE_DEPARTMENT_LIST => UcMcListImport::class,
         InitiativeFile::TYPE_DEPARTMENT_RESPONSE => UcMcResponseImport::class,
+    ],
+    'punjab_saaf_pani_authority' => [
+        InitiativeFile::TYPE_DEPARTMENT_LIST => PspaPlantListImport::class,
+        InitiativeFile::TYPE_DEPARTMENT_RESPONSE => PspaResponseImport::class,
     ],
 ];
