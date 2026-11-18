@@ -20,44 +20,48 @@ class HousingUrbanDevelopmentSeeder extends Seeder
             $initiatives = [
 
                 [
-                    'name' => 'Chief Minister Lahore Development Program (WASA, 9 Zones)',
-                    'table_name' => 'hudphe_lahore_development_wasa_9_zones',
+                    'name' => 'Punjab Saaf Pani Authority (PSPA)',
+                    'table_name' => 'punjab_saaf_pani_authority',
                 ],
+                // [
+                //     'name' => 'Chief Minister Lahore Development Program (WASA, 9 Zones)',
+                //     'table_name' => 'hudphe_lahore_development_wasa_9_zones',
+                // ],
 
-                [
-                    'name' => "Chief Minister's Saaf Pani Program across Punjab",
-                    'table_name' => 'hudphe_saaf_pani_across_punjab',
-                ],
+                // [
+                //     'name' => "Chief Minister's Saaf Pani Program across Punjab",
+                //     'table_name' => 'hudphe_saaf_pani_across_punjab',
+                // ],
 
-                [
-                    'name' => 'Chief Minister WATSAN Program',
-                    'table_name' => 'hudphe_watsan_program',
-                ],
+                // [
+                //     'name' => 'Chief Minister WATSAN Program',
+                //     'table_name' => 'hudphe_watsan_program',
+                // ],
 
-                [
-                    'name' => 'Chief Minister Lahore Sanitation Package',
-                    'table_name' => 'hudphe_lahore_sanitation_package',
-                ],
+                // [
+                //     'name' => 'Chief Minister Lahore Sanitation Package',
+                //     'table_name' => 'hudphe_lahore_sanitation_package',
+                // ],
 
-                [
-                    'name' => 'Chief Minister Saaf Pani Program',
-                    'table_name' => 'hudphe_saaf_pani_program',
-                ],
+                // [
+                //     'name' => 'Chief Minister Saaf Pani Program',
+                //     'table_name' => 'hudphe_saaf_pani_program',
+                // ],
 
-                [
-                    'name' => 'Apni Chhat Apna Ghar Program',
-                    'table_name' => 'hudphe_apni_chhat_apna_ghar',
-                ],
+                // [
+                //     'name' => 'Apni Chhat Apna Ghar Program',
+                //     'table_name' => 'hudphe_apni_chhat_apna_ghar',
+                // ],
 
-                [
-                    'name' => 'Apni Zameen Apna Ghar',
-                    'table_name' => 'hudphe_apni_zameen_apna_ghar',
-                ],
+                // [
+                //     'name' => 'Apni Zameen Apna Ghar',
+                //     'table_name' => 'hudphe_apni_zameen_apna_ghar',
+                // ],
 
-                [
-                    'name' => 'Chief Minister Punjab Development Program – WASA component',
-                    'table_name' => 'hudphe_punjab_development_wasa',
-                ],
+                // [
+                //     'name' => 'Chief Minister Punjab Development Program – WASA component',
+                //     'table_name' => 'hudphe_punjab_development_wasa',
+                // ],
 
             ];
 

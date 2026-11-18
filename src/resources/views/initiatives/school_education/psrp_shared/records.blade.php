@@ -31,8 +31,20 @@
 
     $numericTypes = ['number', 'change', 'percent', 'change_percent'];
 
+    // Pages whose name column is not "school_name" say which one it is.
+    $nameColumn ??= 'school_name';
+
+    // What a visit with no name is called, what a row's open button is called, and the table's name,
+    // for screen readers. Pages without EMIS codes (UC MC) give their own.
+    $untitledVisit ??= static fn ($visit) => 'EMIS '.$visit->emis_code;
+    $visitLabel ??= static fn ($row) => 'EMIS '.$row->emis_code;
+    $tableLabel ??= 'School visits table';
+
+    // A page whose older visits have a date only shows no time for them (UC MC).
+    $detailDateOnlyFormat ??= null;
+
     // Everything recorded for a visit, shown when its row is opened.
-    $visitDetail = static function ($visit) use ($detailFields, $detailDateFormat) {
+    $visitDetail = static function ($visit) use ($detailFields, $detailDateFormat, $detailDateOnlyFormat, $nameColumn, $untitledVisit) {
         $fields = [];
 
         foreach ($detailFields as $column => $label) {
@@ -43,14 +55,16 @@
                 'value' => match (true) {
                     $value === null || $value === '' => '—',
                     is_bool($value) => $value ? 'Yes' : 'No',
-                    $column === 'visited_at' => $value->format($detailDateFormat),
+                    $column === 'visited_at' => $value->format(
+                        $detailDateOnlyFormat !== null && $value->format('H:i:s') === '00:00:00' ? $detailDateOnlyFormat : $detailDateFormat
+                    ),
                     default => (string) $value,
                 },
             ];
         }
 
         return [
-            'title' => $visit->school_name ?: 'EMIS '.$visit->emis_code,
+            'title' => $visit->{$nameColumn} ?: $untitledVisit($visit),
             'subtitle' => trim(($visit->district ?? '').' · '.$visit->visited_at->format('j M Y'), ' ·'),
             'fields' => $fields,
         ];
@@ -138,7 +152,7 @@
 <div
     class="psrp-table-wrapper"
     role="region"
-    aria-label="{{ $showingDistricts ? 'District summary table' : 'School visits table' }}"
+    aria-label="{{ $showingDistricts ? 'District summary table' : $tableLabel }}"
     tabindex="0"
 >
     <table class="psrp-table">
@@ -174,7 +188,7 @@
                             'is-bad' => $isBadCell($value, $column),
                         ])>
                             @if ($loop->first && ! $showingDistricts)
-                                <button type="button" class="psrp-visit-open" aria-label="Open visit details for EMIS {{ $row->emis_code }}">{{ $cellText($value, $column) }}</button>
+                                <button type="button" class="psrp-visit-open" aria-label="Open visit details for {{ $visitLabel($row) }}">{{ $cellText($value, $column) }}</button>
                             @else
                                 {{ $cellText($value, $column) }}
                             @endif

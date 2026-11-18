@@ -19,15 +19,15 @@ class HomeSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Establishment of Hostel facility for Women Scientist (PAFDA and PFSA)',
-                    'table_name' => 'hom_hostel_women_scientists_pafda_pfsa',
-                ],
+                // [
+                //     'name' => 'Establishment of Hostel facility for Women Scientist (PAFDA and PFSA)',
+                //     'table_name' => 'hom_hostel_women_scientists_pafda_pfsa',
+                // ],
 
-                [
-                    'name' => 'Establishment Of Crime Scene Units (CSUs) of PFSA at 28 Districts',
-                    'table_name' => 'hom_crime_scene_units_pfsa_28_districts',
-                ],
+                // [
+                //     'name' => 'Establishment Of Crime Scene Units (CSUs) of PFSA at 28 Districts',
+                //     'table_name' => 'hom_crime_scene_units_pfsa_28_districts',
+                // ],
 
             ];
 

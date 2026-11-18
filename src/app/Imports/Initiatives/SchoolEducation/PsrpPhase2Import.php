@@ -4,21 +4,11 @@ namespace App\Imports\Initiatives\SchoolEducation;
 
 use App\Models\Initiatives\SchoolEducation\PsrpPhase2;
 use App\Models\Initiatives\SchoolEducation\PsrpPhase2SchoolName;
-use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 class PsrpPhase2Import extends PsrpVisitImport
 {
     private const ENROLLMENT_COLUMNS = ['students_at_handover', 'students_enrolled'];
-
-    // Phase 2 visits began in August 2025, and the Enrollment sheet dates 2024 visits a year later.
-    private const FIRST_VISIT_YEAR = 2025;
-
-    // Districts known to be mistyped in the visit file.
-    private const DISTRICT_CORRECTIONS = ['34320282' => 'Sialkot'];
-
-    // Visits dated before Phase 2 began, and put right.
-    private int $correctedYears = 0;
 
     // Headings are matched ignoring case and punctuation, so "EMIS Code" also matches "emis_code".
     private const COLUMNS = [
@@ -156,40 +146,22 @@ class PsrpPhase2Import extends PsrpVisitImport
         return PsrpPhase2::class;
     }
 
+    // Dates and districts are saved as the file has them; nothing is changed for particular schools.
     public function run(string $path, string $extension): array
     {
-        $this->correctedYears = 0;
-
         $result = parent::run($path, $extension);
 
         if (! isset($result['failure'])) {
             $this->saveSchoolNames($path, $extension);
         }
 
-        return $result + ['yearsCorrected' => $this->correctedYears];
-    }
-
-    protected function correctedDate(Carbon $date): Carbon
-    {
-        if ($date->year >= self::FIRST_VISIT_YEAR) {
-            return $date;
-        }
-
-        $this->correctedYears++;
-
-        return $date->copy()->setYear(self::FIRST_VISIT_YEAR);
+        return $result;
     }
 
     // Enrollment has its own sheet in the visit file. Its dates don't always match the visit
     // sheet's, so it joins on the school alone. A file without that sheet leaves saved figures as they are.
     protected function withExtraSheets(array $records, array $columns, string $path, string $extension): array
     {
-        foreach ($records as $key => $record) {
-            if (isset(self::DISTRICT_CORRECTIONS[$record['emis_code']]) && array_key_exists('district', $record)) {
-                $records[$key]['district'] = self::DISTRICT_CORRECTIONS[$record['emis_code']];
-            }
-        }
-
         if (array_intersect(self::ENROLLMENT_COLUMNS, $columns) !== []) {
             return [$records, $columns];
         }

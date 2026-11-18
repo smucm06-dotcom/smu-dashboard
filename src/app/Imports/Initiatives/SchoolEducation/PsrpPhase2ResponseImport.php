@@ -15,8 +15,12 @@ class PsrpPhase2ResponseImport implements InitiativeFileImport
 
     private const MAX_ROWS = 100000;
 
+    // Every column of the department's file: Sr, EMIS Code, District, SMU Visit Date,
+    // Analysis Report Remarks, PSPR-PEF Response, PSPR-PEF Response Date.
     private const COLUMNS = [
+        'source_sr' => ['sr', 'sr no', 's no', 'sno', 'serial', 'serial no'],
         'emis_code' => ['emis code', 'emis', 'emis no', 'emis number'],
+        'district' => ['district', 'district name'],
         'visit_date' => ['smu visit date', 'visit date'],
         'sent_remarks' => ['analysis report remarks', 'report remarks', 'remarks'],
         'responded_at' => ['pspr pef response date', 'response date', 'reply date'],
@@ -47,7 +51,9 @@ class PsrpPhase2ResponseImport implements InitiativeFileImport
 
             // A row with a blank reply still shows that the school was answered, so it is kept.
             $rows[] = [
+                'source_sr' => is_numeric($row['source_sr'] ?? null) && (float) $row['source_sr'] >= 0 ? (int) $row['source_sr'] : null,
                 'emis_code' => $emis,
+                'district' => $this->cleanText($row['district'] ?? null, 100),
                 'visit_date' => $this->date($row['visit_date'] ?? null),
                 'sent_remarks' => $this->cleanText($row['sent_remarks'] ?? null),
                 'responded_at' => $this->date($row['responded_at'] ?? null),

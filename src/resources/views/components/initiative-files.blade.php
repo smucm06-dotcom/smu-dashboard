@@ -1,6 +1,7 @@
-@props(['initiative', 'files', 'visitsUploadUrl', 'visitMatch' => 'visit date and time'])
+@props(['initiative', 'files', 'visitsUploadUrl', 'visitMatch' => 'visit date and time', 'matchNote' => null, 'listItems' => 'schools'])
 
 @php
+    // A page without EMIS codes says how its visits are matched (matchNote) and what its list holds (listItems).
     $visitsType = \App\Models\InitiativeFile::TYPE_OUR_VISITS;
     $listType = \App\Models\InitiativeFile::TYPE_DEPARTMENT_LIST;
     $reportType = \App\Models\InitiativeFile::TYPE_OUR_REPORT;
@@ -24,7 +25,7 @@
             'empty' => 'No visit files have been uploaded yet.',
             'showEntries' => true,
             'notes' => [
-                'You can upload the same file again after adding rows. Visits are matched by EMIS code and '.$visitMatch.', so nothing is duplicated.',
+                'You can upload the same file again after adding rows. '.($matchNote ?? 'Visits are matched by EMIS code and '.$visitMatch.', so nothing is duplicated.'),
                 'New visits are added and changed ones are updated. Visits not in the file are kept.',
                 'Every row is checked first. If any row has a problem, nothing is saved and the problems are listed.',
             ],
@@ -39,7 +40,7 @@
             'listTitle' => 'Current department list',
             'empty' => 'No department list has been uploaded yet.',
             'showEntries' => true,
-            'deleteWarning' => 'The schools saved from it are removed from this page too.',
+            'deleteWarning' => 'The '.$listItems.' saved from it are removed from this page too.',
         ],
         $reportType => [
             'button' => 'Upload report',
@@ -61,9 +62,18 @@
             'listTitle' => 'Uploaded department responses',
             'empty' => 'No department responses have been uploaded yet.',
             'showEntries' => true,
+            'notes' => [
+                'A CSV or Excel file replaces the earlier one, so the page always compares against the latest file. The earlier file and its replies are deleted.',
+                'PDF letters from the department are kept beside it and replace nothing.',
+                'If the new file cannot be read, nothing changes.',
+            ],
             'deleteWarning' => 'Replies saved from it are removed from this page too.',
         ],
     ];
+
+    // The response file whose replies the page uses now. A new CSV or Excel file replaces it.
+    $currentResponse = $files->get($responseType, collect())
+        ->first(fn ($file) => strtolower(pathinfo($file->original_name, PATHINFO_EXTENSION)) !== 'pdf');
 
     $failedUpload = session('initiativeFileError');
     $failedType = $failedUpload['type'] ?? null;
@@ -134,6 +144,8 @@
             enctype="multipart/form-data"
             @if ($type === $listType && $currentList)
                 data-confirm="Replace &quot;{{ $currentList->original_name }}&quot; with the new file? The current list will be permanently deleted."
+            @elseif ($type === $responseType && $currentResponse)
+                data-confirm="A CSV or Excel file replaces &quot;{{ $currentResponse->original_name }}&quot;, and its replies will be permanently deleted. A PDF is only added. Continue?"
             @endif
         >
             @csrf

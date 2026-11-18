@@ -19,10 +19,10 @@ class PriceControlCommoditiesSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => "Chief Minister's Program for Sahulat Bazaars in Punjab",
-                    'table_name' => 'pccm_cm_sahulat_bazaars_punjab',
-                ],
+                // [
+                //     'name' => "Chief Minister's Program for Sahulat Bazaars in Punjab",
+                //     'table_name' => 'pccm_cm_sahulat_bazaars_punjab',
+                // ],
 
             ];
 

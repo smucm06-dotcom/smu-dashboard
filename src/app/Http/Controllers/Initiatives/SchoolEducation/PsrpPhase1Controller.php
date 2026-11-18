@@ -10,6 +10,7 @@ use App\Imports\Initiatives\SchoolEducation\PsrpPhase1Import;
 use App\Models\Initiative;
 use App\Models\InitiativeFile;
 use App\Models\Initiatives\SchoolEducation\PsrpPhase1;
+use App\Models\Initiatives\SchoolEducation\PsrpPhase1Response;
 use App\Models\Initiatives\SchoolEducation\PsrpPhase1School;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -223,7 +224,7 @@ class PsrpPhase1Controller extends Controller
 
         return response()
             ->view('initiatives.school_education.psrp_phase_1.show', $records + [
-                'topbar' => $this->topbar($initiative, $files),
+                'topbar' => $this->topbar($initiative),
                 'files' => $files,
             ])
             ->header('Vary', self::RECORDS_HEADER);
@@ -264,18 +265,26 @@ class PsrpPhase1Controller extends Controller
         return $this->uploadVisits($request, $initiative, $import);
     }
 
-    // Totals for the whole initiative, so the banner stays the same when filters change.
-    private function topbar(Initiative $initiative, Collection $files): array
+    // The four cards for everything on file. The page's script keeps them in step with the
+    // district and date filters, counting the same way as the figures below them.
+    private function topbar(Initiative $initiative): array
     {
+        // Replies count for schools the page knows: on the department's list or visited.
+        $known = PsrpPhase1School::query()->toBase()->select('emis_code')
+            ->union(PsrpPhase1::query()->toBase()->select('emis_code'));
+        $reported = PsrpPhase1Response::query()->toBase()->whereIn('emis_code', $known);
+
         return [
             'title' => $initiative->name,
             'description' => 'Monitor field inspection data and implementation progress for this initiative.',
             'stats' => [
-                // Files are newest first, so this is the department's latest list.
-                ['label' => 'Total Schools', 'value' => $files->get(InitiativeFile::TYPE_DEPARTMENT_LIST)?->first()?->row_count],
-                ['label' => 'Visited Schools', 'value' => PsrpPhase1::count()],
-                ['label' => 'Reports Uploaded', 'value' => $files->get(InitiativeFile::TYPE_OUR_REPORT)?->count() ?? 0],
-                ['label' => 'Department Response', 'value' => $files->get(InitiativeFile::TYPE_DEPARTMENT_RESPONSE)?->count() ?? 0],
+                ['label' => 'Total Schools', 'value' => PsrpPhase1School::count(), 'id' => 'c-total'],
+                // Visits, as before: a school visited twice counts twice.
+                ['label' => 'Visited Schools', 'value' => PsrpPhase1::count(), 'id' => 'c-visited'],
+                // Our report PDFs, uploaded with "Upload report". A file covers every district and date,
+                // so this one stays the same whatever the filters select.
+                ['label' => 'Reports Sent to Department', 'value' => $initiative->files()->where('type', InitiativeFile::TYPE_OUR_REPORT)->count(), 'id' => 'c-reports'],
+                ['label' => 'Department Responses', 'value' => (clone $reported)->whereRaw("TRIM(response) <> ''")->distinct()->count('emis_code'), 'id' => 'c-replied'],
             ],
         ];
     }

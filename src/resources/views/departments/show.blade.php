@@ -22,11 +22,6 @@
         <h3>{{ $department->name }}</h3>
         <p>Explore the initiatives registered under this department.</p>
     </div>
-
-    <span class="initiative-count">
-        {{ $initiatives->count() }}
-        {{ \Illuminate\Support\Str::plural('Initiative', $initiatives->count()) }}
-    </span>
 </div>
 
 <!-- SEARCH -->
@@ -137,17 +132,6 @@
         color: #687D73;
         font-size: 12px;
         line-height: 1.6;
-    }
-
-    .initiative-count {
-        flex-shrink: 0;
-        padding: 9px 15px;
-        border-radius: 20px;
-        background: #EAF5EE;
-        color: #0B6046;
-        font-size: 11px;
-        font-weight: 600;
-        white-space: nowrap;
     }
 
     /* SEARCH */
@@ -414,4 +398,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+@endpush
+
+{{-- The banner's cards are numbered 1, 2, 3, 4, as on the initiative pages. --}}
+@push('styles')
+@include('departments.partials.topbar-numbers')
 @endpush

@@ -19,6 +19,11 @@
         </a>
         <i data-lucide="chevron-right" aria-hidden="true"></i>
         <span aria-current="page">{{ $initiative->name }}</span>
+        {{-- The page as it is on the screen, as a PDF download (see psrp_shared/pdf-export) --}}
+        <button type="button" class="psrp-pdf-btn" id="pdfExport" data-pdf-skip data-pdf-name="{{ $initiative->name }}">
+            <i data-lucide="file-down" aria-hidden="true"></i>
+            <span>Export to PDF</span>
+        </button>
     </nav>
 
     {{-- Filters: these apply to the whole page --}}
@@ -44,7 +49,6 @@
             <noscript><button type="submit" class="ctl">Apply</button></noscript>
             <button type="button" class="link" id="f-clear" hidden>Clear filters</button>
             <div class="fb-meta">
-                <span class="scope" id="scope"></span>
                 <nav class="nav" aria-label="Sections">
                     <a href="#changed">What changed</a><a href="#mapsec">Map</a><a href="#issues">Issues</a><a href="#verify">Declared vs found</a><a href="#districts">Districts</a><a href="#psrp-records">Records</a>
                 </nav>
@@ -125,7 +129,17 @@
         </section>
 
         <section id="districts" aria-labelledby="h-districts">
-            <div class="sec-h"><h2 id="h-districts">How districts compare</h2><p>Click a district to focus the whole page on it. Click a column heading to sort.</p></div>
+            <div class="sec-h">
+                <div class="sec-h-row">
+                    <h2 id="h-districts">How districts compare</h2>
+                    {{-- This section only, as a PDF download (see psrp_shared/pdf-export) --}}
+                    <button type="button" class="psrp-pdf-btn" data-pdf-section="districts" data-pdf-skip title="Export only this section to PDF">
+                        <i data-lucide="file-down" aria-hidden="true"></i>
+                        <span>Export to PDF</span>
+                    </button>
+                </div>
+                <p>Click a district to focus the whole page on it. Click a column heading to sort.</p>
+            </div>
             <div class="insights" id="insights"></div>
             <div class="card tablewrap"><table class="dt dvt" id="dt"></table></div>
             <div class="card pad" style="margin-top:14px"><h3>By type of licensee</h3><div class="tablewrap"><table class="ct" id="ct"></table></div></div>
@@ -177,4 +191,5 @@
 <script src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
 @include('initiatives.school_education.psrp_phase_2.partials.findings-script')
 @include('initiatives.school_education.psrp_shared.records-script')
+@include('initiatives.school_education.psrp_shared.pdf-export')
 @endpush

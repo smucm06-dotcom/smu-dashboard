@@ -144,6 +144,7 @@ return [
     'hudphe_saaf_pani_across_punjab' => 'Saaf Pani Across Punjab',
     'hudphe_saaf_pani_program' => 'Saaf Pani',
     'hudphe_watsan_program' => 'WATSAN',
+    'punjab_saaf_pani_authority' => 'Saaf Pani Authority',
 
     // Information & Culture (INC)
     'inc_administrative_studio_complex' => 'Studio Complex',
@@ -194,6 +195,7 @@ return [
     'lgcd_rural_sanitation_program' => 'Rural Sanitation',
     'lgcd_sustainable_development_goals' => 'SDGs',
     'lgcd_suthra_punjab' => 'Suthra Punjab',
+    'lgcd_uc_mc_office_service_delivery' => 'UC MC Offices',
 
     // Labour & Human Resource (LHR)
     'lhr_social_security_ration_card' => 'Workers Ration Card',
@@ -258,8 +260,8 @@ return [
     'sde_youth_employability_bpos' => 'Youth BPO Employability',
 
     // School Education (SED)
+    'additional_classrooms' => 'Additional Classrooms',
     'afternoon_school_program' => 'Afternoon School',
-    'construction_additional_classrooms_peima' => 'Additional Classrooms',
     'maryam_nawaz_academic_leadership_center' => 'Academic Leadership Center',
     'missing_facilities_it_labs_peima' => 'Missing Facilities and IT Labs',
     'nawaz_sharif_centre_excellence_10_divisions' => 'NS Excellence 10 Divisions',
@@ -297,6 +299,7 @@ return [
     'spe_maryam_nawaz_khud_mukhtar_program' => 'Khud-Mukhtar',
     'spe_surveillance_special_schools_phase_2' => 'School Surveillance Phase 2',
     'spe_transport_special_education' => 'Special Education Transport',
+    'special_education_institutes' => 'Special Education Institutes',
 
     // Social Welfare (SW)
     'sw_assistive_devices_wheelchair_program' => 'Assistive Devices',

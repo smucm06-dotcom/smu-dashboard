@@ -19,10 +19,20 @@ return new class extends Migration
                 ->on('initiative_files')
                 ->cascadeOnDelete();
 
+            // Excel: Sr., EMIS, District, School Name, SMU Audit Report Date, PEF Response Date,
+            // Remarks of SMU, Response of PEF. Every column is kept, in the file's order.
+            $table->unsignedInteger('source_sr')->nullable();
             $table->string('emis_code', 20);
-            $table->text('sent_remarks')->nullable();
+            // District and school name as written in the file.
+            $table->string('district', 100)->nullable();
+            $table->string('school_name')->nullable();
+            // The date of SMU's audit report. Earlier files gave the SMU visit date here.
+            $table->date('audit_report_date')->nullable();
             $table->date('responded_at')->nullable();
-            $table->text('response');
+            // Remarks and replies run long; these hold the longest an Excel cell can be.
+            $table->mediumText('sent_remarks')->nullable();
+            // Empty when the department left the reply blank.
+            $table->mediumText('response');
 
             $table->timestamps();
 

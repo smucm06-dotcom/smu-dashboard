@@ -19,50 +19,50 @@ class PunjabInformationTechnologyBoardSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Chief Minister IT Internship Program',
-                    'table_name' => 'pitb_cm_it_internship_program',
-                ],
+                // [
+                //     'name' => 'Chief Minister IT Internship Program',
+                //     'table_name' => 'pitb_cm_it_internship_program',
+                // ],
 
-                [
-                    'name' => 'Punjab e-Commerce Initiative',
-                    'table_name' => 'pitb_punjab_ecommerce_initiative',
-                ],
+                // [
+                //     'name' => 'Punjab e-Commerce Initiative',
+                //     'table_name' => 'pitb_punjab_ecommerce_initiative',
+                // ],
 
-                [
-                    'name' => 'Accelerate Punjab',
-                    'table_name' => 'pitb_accelerate_punjab',
-                ],
+                // [
+                //     'name' => 'Accelerate Punjab',
+                //     'table_name' => 'pitb_accelerate_punjab',
+                // ],
 
-                [
-                    'name' => 'AI and Emerging Technologies for Governance',
-                    'table_name' => 'pitb_ai_emerging_technologies_governance',
-                ],
+                // [
+                //     'name' => 'AI and Emerging Technologies for Governance',
+                //     'table_name' => 'pitb_ai_emerging_technologies_governance',
+                // ],
 
-                [
-                    'name' => 'Establishment of Chief Minister IT Park',
-                    'table_name' => 'pitb_cm_it_park',
-                ],
+                // [
+                //     'name' => 'Establishment of Chief Minister IT Park',
+                //     'table_name' => 'pitb_cm_it_park',
+                // ],
 
-                [
-                    'name' => 'Establishment of CM Complaint Helpline',
-                    'table_name' => 'pitb_cm_complaint_helpline',
-                ],
+                // [
+                //     'name' => 'Establishment of CM Complaint Helpline',
+                //     'table_name' => 'pitb_cm_complaint_helpline',
+                // ],
 
-                [
-                    'name' => 'Global IT Certifications Program',
-                    'table_name' => 'pitb_global_it_certifications',
-                ],
+                // [
+                //     'name' => 'Global IT Certifications Program',
+                //     'table_name' => 'pitb_global_it_certifications',
+                // ],
 
-                [
-                    'name' => 'Punjab Dastak Program',
-                    'table_name' => 'pitb_punjab_dastak_program',
-                ],
+                // [
+                //     'name' => 'Punjab Dastak Program',
+                //     'table_name' => 'pitb_punjab_dastak_program',
+                // ],
 
-                [
-                    'name' => 'Establishment of Makerspace Punjab',
-                    'table_name' => 'pitb_makerspace_punjab',
-                ],
+                // [
+                //     'name' => 'Establishment of Makerspace Punjab',
+                //     'table_name' => 'pitb_makerspace_punjab',
+                // ],
 
             ];
 

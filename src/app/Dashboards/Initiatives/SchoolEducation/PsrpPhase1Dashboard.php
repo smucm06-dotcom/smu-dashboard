@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 class PsrpPhase1Dashboard
 {
     // Change this when the shape of the data changes, so browsers don't keep the old copy.
-    private const DATA_VERSION = 2;
+    private const DATA_VERSION = 3;
 
     public const NO_DISTRICT = 'Not recorded';
 
@@ -35,7 +35,8 @@ class PsrpPhase1Dashboard
     {
         $list = PsrpPhase1School::query()->toBase()->get()->keyBy('emis_code');
         $visits = PsrpPhase1::query()->toBase()->orderBy('visited_at')->orderBy('id')->get()->groupBy('emis_code');
-        $replies = PsrpPhase1Response::query()->toBase()->orderBy('id')->get()->groupBy('emis_code');
+        // A blank reply is saved but says nothing, so the findings leave it out, as before.
+        $replies = PsrpPhase1Response::query()->toBase()->whereRaw("TRIM(response) <> ''")->orderBy('id')->get()->groupBy('emis_code');
 
         $schools = [];
 

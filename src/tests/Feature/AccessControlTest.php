@@ -140,14 +140,16 @@ class AccessControlTest extends TestCase
 
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertSame(299, Initiative::count());
-        $this->assertSame(299, Permission::count());
+        // Since 16 Nov the seeders hold only the initiatives that are built; the rest wait, commented
+        // out, in their seeders, while the list of short names keeps them all. So every seeded
+        // initiative needs a permission and a listed short name, but not the other way round.
+        $this->assertGreaterThan(0, Initiative::count());
+        $this->assertSame(Initiative::count(), Permission::count());
         $this->assertSame(Department::count() + 1, Role::count());
 
         $listed = array_keys(require database_path('data/initiative_short_names.php'));
 
         $this->assertSame([], array_values(array_diff(Initiative::pluck('table_name')->all(), $listed)));
-        $this->assertSame([], array_values(array_diff($listed, Initiative::pluck('table_name')->all())));
         $this->assertTrue(User::where('email', 'admin@smu.local')->first()->exists);
     }
 
@@ -291,12 +293,21 @@ class AccessControlTest extends TestCase
 
     public function test_a_department_user_sees_only_their_initiatives_and_counts(): void
     {
+        // A report on each School Education initiative. The viewer may open Phase 1 only.
+        $this->storedFile($this->phaseOne);
+        $this->storedFile($this->phaseTwo);
+
+        // Cards: Total Initiatives, Field visits by SMU, Reports sent to department, Visits in the last 30 days.
         $this->actingAs($this->viewer)->get(route('departments.show', $this->school))
             ->assertOk()
             ->assertSee($this->phaseOne->name)
             ->assertDontSee($this->phaseTwo->name)
             ->assertDontSee('Back to Departments')
-            ->assertViewHas('topbar', fn ($topbar) => $topbar['stats'][0]['value'] === 1 && $topbar['stats'][3]['value'] === 1);
+            ->assertViewHas('topbar', fn ($topbar) => $topbar['stats'][0]['value'] === 1 && $topbar['stats'][2]['value'] === 1);
+
+        $this->actingAs($this->admin)->get(route('departments.show', $this->school))
+            ->assertOk()
+            ->assertViewHas('topbar', fn ($topbar) => $topbar['stats'][0]['value'] === 2 && $topbar['stats'][2]['value'] === 2);
     }
 
     public function test_a_department_user_cannot_open_another_department(): void

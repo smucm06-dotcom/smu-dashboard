@@ -74,7 +74,8 @@ trait ManagesPsrpVisits
 
     // The schools the map shows for one issue. The page sends their visits, so the file always
     // holds exactly what is on the map, whatever filters are on.
-    private function downloadMapSchools(Request $request, string $model, array $columns, string $prefix)
+    // Rows come in the visit file's order: by its Sr column unless another column is named.
+    private function downloadMapSchools(Request $request, string $model, array $columns, string $prefix, string $orderColumn = 'source_sr')
     {
         $sent = $request->input('ids');
         $ids = array_map('intval', array_filter(explode(',', is_string($sent) ? $sent : ''), 'ctype_digit'));
@@ -83,7 +84,7 @@ trait ManagesPsrpVisits
 
         $visits = $model::query()
             ->whereIntegerInRaw('id', $ids)
-            ->orderBy('source_sr')
+            ->orderBy($orderColumn)
             ->orderBy('id')
             ->cursor();
 
@@ -180,11 +181,20 @@ trait ManagesPsrpVisits
                 $cells = [];
 
                 foreach ($columns as $key => $column) {
-                    $value = data_get($row, $key) ?? ($column['blank'] ?? null);
+                    $value = data_get($row, $key);
+
+                    // A blank written the file's own way ("Nil", "N/A", "—"), whatever the column's type.
+                    if ($value === null && isset($column['blank'])) {
+                        $cells[] = Cell::fromValue($column['blank']);
+
+                        continue;
+                    }
 
                     // Real dates and numbers, so they can be sorted and added up in Excel.
                     $cells[] = match (true) {
                         $value !== null && $column['type'] === 'date' => Cell::fromValue(Carbon::parse($value), $dateStyles[$key] ??= new Style(format: $column['excel_format'])),
+                        // Saved as 71.4, shown in Excel as 71% like the visit file (Special Education).
+                        is_numeric($value) && $column['type'] === 'percent' => Cell::fromValue($value / 100, $dateStyles['%'] ??= new Style(format: '0%')),
                         is_numeric($value) && $column['type'] === 'number' => Cell::fromValue($value + 0),
                         default => Cell::fromValue($this->csvValue($value, $column)),
                     };

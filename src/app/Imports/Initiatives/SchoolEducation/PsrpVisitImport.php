@@ -37,6 +37,12 @@ abstract class PsrpVisitImport
     // Coordinates that could not be used. The visit is still saved, without a location.
     private int $ignoredCoordinates = 0;
 
+    // Dates with an impossible month, such as 21/20/2025, whose month was taken from the visits around them.
+    private array $monthCorrections = [];
+
+    // A corrected date must land within this many days of the visit before or after it.
+    private const MAX_DAYS_FROM_NEIGHBOUR = 7;
+
     public function __construct(protected SpreadsheetReader $reader)
     {
     }
@@ -46,6 +52,42 @@ abstract class PsrpVisitImport
 
     // The model of the table the visits are saved in.
     abstract protected function model(): string;
+
+    // The columns a re-uploaded visit is matched on. Together they are the table's unique key.
+    // Most pages match on EMIS code and visit date; a page without EMIS codes names its own.
+    protected function keyColumns(): array
+    {
+        return self::KEY_COLUMNS;
+    }
+
+    // For a file that can hold several rows with the same key (UC MC's visits share Timestamp and
+    // Email when one form covered two UCs): the last key column, which numbers those rows 1, 2, 3,
+    // so every row is kept. It is not a column of the file. Without one, a repeated key is reported
+    // as a problem.
+    protected function repeatColumn(): ?string
+    {
+        return null;
+    }
+
+    // What rows sharing a key are put in order by before they are numbered: all their values. A page
+    // whose file has a column that is only the row's place in the file (PSPA's Sr) leaves it out, so
+    // adding a row in between doesn't renumber the others.
+    protected function repeatOrder(array $record): string
+    {
+        return implode("\x1F", $record);
+    }
+
+    // A row's key, as text, from its key columns.
+    protected function keyOf(array $record): string
+    {
+        return implode('|', array_map(fn ($column) => $record[$column] ?? '', $this->keyColumns()));
+    }
+
+    protected function headingsNotFoundMessage(): string
+    {
+        return 'The column headings could not be found. The file needs an EMIS column (such as "EMIS Code") '
+            .'and a visit date column (such as "Timestamp" or "Visit date").';
+    }
 
     // For a phase whose file has dates known to be mistyped.
     protected function correctedDate(Carbon $date): Carbon
@@ -63,6 +105,7 @@ abstract class PsrpVisitImport
     {
         $this->correctedDates = 0;
         $this->ignoredCoordinates = 0;
+        $this->monthCorrections = [];
 
         try {
             $rows = $this->reader->read(
@@ -83,8 +126,7 @@ abstract class PsrpVisitImport
 
         if ($header === null) {
             return [
-                'failure' => 'The column headings could not be found. The file needs an EMIS column (such as "EMIS Code") '
-                    .'and a visit date column (such as "Timestamp" or "Visit date").',
+                'failure' => $this->headingsNotFoundMessage(),
                 'ignoredColumns' => array_values(array_filter(array_map(
                     fn ($heading) => $this->displayValue($heading),
                     reset($rows)
@@ -95,9 +137,12 @@ abstract class PsrpVisitImport
         $dataRows = array_filter($rows, fn ($number) => $number > $header['number'], ARRAY_FILTER_USE_KEY);
         $dateIndex = array_search('visited_at', $header['columns'], true);
         $dateOrder = $this->slashDateOrder(array_column($dataRows, $dateIndex));
+        $dataRows = $this->withMistypedMonthsFixed($dataRows, $dateIndex, $dateOrder);
 
         $records = [];
         $rowOfKey = [];
+        $repeats = [];
+        $repeatColumn = $this->repeatColumn();
         $problems = [];
         $badRows = 0;
 
@@ -115,8 +160,11 @@ abstract class PsrpVisitImport
                 }
             }
 
-            if ($rowProblems === []) {
-                $key = $record['emis_code'].'|'.$record['visited_at'];
+            if ($rowProblems === [] && $repeatColumn !== null) {
+                // Rows sharing the key without its number are numbered once every row is read.
+                $repeats[$this->keyOf([$repeatColumn => ''] + $record)][] = $record;
+            } elseif ($rowProblems === []) {
+                $key = $this->keyOf($record);
 
                 if (isset($rowOfKey[$key])) {
                     $rowProblems[] = $this->problem(
@@ -148,10 +196,28 @@ abstract class PsrpVisitImport
             ];
         }
 
-        [$records, $columns] = $this->withExtraSheets($records, array_values($header['columns']), $path, $extension);
+        // Rows sharing a key are numbered 1, 2, 3 in the order of their values, not their place in the
+        // file, so a file sorted another way (such as the records CSV) still matches the same rows.
+        foreach ($repeats as $rows) {
+            usort($rows, fn (array $a, array $b) => strcmp($this->repeatOrder($a), $this->repeatOrder($b)));
+
+            foreach ($rows as $index => $record) {
+                $record[$repeatColumn] = (string) ($index + 1);
+                $records[$this->keyOf($record)] = $record;
+            }
+        }
+
+        $fileColumns = array_values($header['columns']);
+        [$records, $columns] = $this->withExtraSheets(
+            $records,
+            $repeatColumn === null ? $fileColumns : [...$fileColumns, $repeatColumn],
+            $path,
+            $extension
+        );
 
         return $this->save($records, $columns) + [
             'datesCorrected' => $this->correctedDates,
+            'monthCorrections' => $this->monthCorrections,
             'coordinatesIgnored' => $this->ignoredCoordinates,
             'ignoredColumns' => $header['ignored'],
             'missingColumns' => array_values(array_map(
@@ -184,7 +250,7 @@ abstract class PsrpVisitImport
                 }
             }
 
-            if (array_diff(self::KEY_COLUMNS, $columns) === []) {
+            if (array_diff($this->keyColumns(), [$this->repeatColumn()], $columns) === []) {
                 return compact('number', 'columns', 'ignored');
             }
         }
@@ -219,6 +285,12 @@ abstract class PsrpVisitImport
 
         foreach ($values as $value) {
             if (is_string($value) && preg_match('#^(\d{1,2})[/-](\d{1,2})[/-]\d{4}#', $value, $parts) === 1) {
+                // A date like 21/20/2025 is impossible either way round, so it is reported on its
+                // own row instead of making every other date in the file look unclear.
+                if ((int) $parts[1] > 12 && (int) $parts[2] > 12) {
+                    continue;
+                }
+
                 $dayFirst = $dayFirst || (int) $parts[1] > 12;
                 $monthFirst = $monthFirst || (int) $parts[2] > 12;
             }
@@ -229,6 +301,103 @@ abstract class PsrpVisitImport
             $monthFirst && ! $dayFirst => 'month',
             default => null,
         };
+    }
+
+    // A month typed with a wrong first digit, as in 21/20/2025 for 21/10/2025, makes a date
+    // impossible. Only months with the same last digit are tried (20 can be 10, 21 can be 11 or 1),
+    // and one is used only if it lands within a week of the visits just before or after it,
+    // since visits are entered in date order. Otherwise the row is reported as before.
+    private function withMistypedMonthsFixed(array $rows, int $dateIndex, ?string $dateOrder): array
+    {
+        $known = array_map(fn (array $values) => $this->plainDate($values[$dateIndex] ?? null, $dateOrder), $rows);
+
+        foreach ($rows as $number => $values) {
+            $value = $values[$dateIndex] ?? null;
+
+            if ($known[$number] !== null || ! is_string($value)
+                || preg_match('#^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(\s.*)?$#', trim($value), $parts) !== 1) {
+                continue;
+            }
+
+            // The file's order says which part is the day. Without one, the day comes first.
+            [$day, $typedMonth] = $dateOrder === 'month' ? [(int) $parts[2], (int) $parts[1]] : [(int) $parts[1], (int) $parts[2]];
+            $year = (int) $parts[3];
+
+            if ($typedMonth <= 12 || $day < 1 || $day > 31) {
+                continue;
+            }
+
+            $around = array_filter([
+                $this->nearestKnownDate($known, $number, -1),
+                $this->nearestKnownDate($known, $number, 1),
+            ]);
+
+            $best = null;
+            $bestGap = null;
+
+            for ($month = 1; $month <= 12; $month++) {
+                if ($month % 10 !== $typedMonth % 10 || ! checkdate($month, $day, $year)) {
+                    continue;
+                }
+
+                $candidate = Carbon::create($year, $month, $day);
+                $gap = min(array_map(fn (Carbon $date) => abs($candidate->diffInDays($date->copy()->startOfDay())), $around ?: [$candidate->copy()->addYears(10)]));
+
+                if ($bestGap === null || $gap < $bestGap) {
+                    [$best, $bestGap] = [$candidate, $gap];
+                }
+            }
+
+            if ($best === null || $bestGap > self::MAX_DAYS_FROM_NEIGHBOUR) {
+                continue;
+            }
+
+            $rows[$number][$dateIndex] = $best->format('Y-m-d').rtrim($parts[4] ?? '');
+            $this->monthCorrections[] = ['row' => $number, 'from' => trim($value), 'to' => $best->format('j M Y')];
+        }
+
+        return $rows;
+    }
+
+    // A row's date without any of the upload's corrections, or null when it isn't a clear date.
+    private function plainDate(mixed $value, ?string $dateOrder): ?Carbon
+    {
+        if ($value instanceof DateTimeInterface) {
+            return Carbon::instance($value)->startOfDay();
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return $this->dateFromExcelNumber((float) $value)?->startOfDay();
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})/', trim($value), $parts) === 1) {
+            [$year, $month, $day] = [(int) $parts[1], (int) $parts[2], (int) $parts[3]];
+        } elseif (preg_match('#^(\d{1,2})([/.-])(\d{1,2})[/.-](\d{4})#', trim($value), $parts) === 1) {
+            $dayFirst = $parts[2] === '.' || $dateOrder !== 'month';
+            [$day, $month, $year] = $dayFirst ? [(int) $parts[1], (int) $parts[3], (int) $parts[4]] : [(int) $parts[3], (int) $parts[1], (int) $parts[4]];
+        } else {
+            return null;
+        }
+
+        return checkdate($month, $day, $year) ? Carbon::create($year, $month, $day) : null;
+    }
+
+    // The date of the nearest row before (-1) or after (1) that has a clear date.
+    private function nearestKnownDate(array $known, int $number, int $direction): ?Carbon
+    {
+        $numbers = array_keys($known);
+
+        for ($i = array_search($number, $numbers, true) + $direction; $i >= 0 && $i < count($numbers); $i += $direction) {
+            if ($known[$numbers[$i]] !== null) {
+                return $known[$numbers[$i]];
+            }
+        }
+
+        return null;
     }
 
     protected function parse(mixed $value, array $column, ?string $dateOrder): ?string
@@ -477,7 +646,7 @@ abstract class PsrpVisitImport
 
         DB::transaction(function () use ($changes, $columns) {
             foreach (array_chunk($changes, 500) as $chunk) {
-                $this->model()::upsert($chunk, self::KEY_COLUMNS, array_values(array_diff($columns, self::KEY_COLUMNS)));
+                $this->model()::upsert($chunk, $this->keyColumns(), array_values(array_diff($columns, $this->keyColumns())));
             }
         });
 
@@ -492,9 +661,11 @@ abstract class PsrpVisitImport
     private function existingRecords(array $records, array $columns): array
     {
         $existing = [];
+        // Saved rows are looked up by the first key column (EMIS code on most pages).
+        $lookup = $this->keyColumns()[0];
 
-        foreach (array_chunk(array_unique(array_column($records, 'emis_code')), 1000) as $emisCodes) {
-            $rows = $this->model()::query()->toBase()->whereIn('emis_code', $emisCodes)->get($columns);
+        foreach (array_chunk(array_unique(array_column($records, $lookup)), 1000) as $lookupValues) {
+            $rows = $this->model()::query()->toBase()->whereIn($lookup, $lookupValues)->get($columns);
 
             foreach ($rows as $row) {
                 $values = [];
@@ -509,7 +680,7 @@ abstract class PsrpVisitImport
                     };
                 }
 
-                $existing[$values['emis_code'].'|'.$values['visited_at']] = $values;
+                $existing[$this->keyOf($values)] = $values;
             }
         }
 

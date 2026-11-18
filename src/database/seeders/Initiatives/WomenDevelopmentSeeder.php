@@ -19,10 +19,10 @@ class WomenDevelopmentSeeder extends Seeder
 
             $initiatives = [
 
-                [
-                    'name' => 'Establishment of Day care Centers through Punjab Day Care Fund society',
-                    'table_name' => 'wdd_day_care_centers_punjab',
-                ],
+                // [
+                //     'name' => 'Establishment of Day care Centers through Punjab Day Care Fund society',
+                //     'table_name' => 'wdd_day_care_centers_punjab',
+                // ],
 
             ];
 
