@@ -6,13 +6,18 @@
 
 @section('content')
 
+@php $isAdmin = auth()->user()->isAdmin(); @endphp
+
 <!-- PAGE HEADER -->
 <div class="initiatives-header">
     <div class="initiatives-heading">
-        <a href="{{ route('departments.index') }}" class="back-link">
-            <i data-lucide="arrow-left"></i>
-            Back to Departments
-        </a>
+        {{-- A department user has only this department, so there is nothing to go back to. --}}
+        @if ($isAdmin)
+            <a href="{{ route('departments.index') }}" class="back-link">
+                <i data-lucide="arrow-left"></i>
+                Back to Departments
+            </a>
+        @endif
 
         <h3>{{ $department->name }}</h3>
         <p>Explore the initiatives registered under this department.</p>
@@ -61,13 +66,20 @@
                 <i data-lucide="folder-open"></i>
             </div>
             <h4>No Initiatives Available</h4>
-            <p>
-                No active initiatives have been registered
-                under this department yet.
-            </p>
-            <a href="{{ route('departments.index') }}" class="empty-back">
-                Back to Departments
-            </a>
+            @if ($isAdmin)
+                <p>
+                    No active initiatives have been registered
+                    under this department yet.
+                </p>
+                <a href="{{ route('departments.index') }}" class="empty-back">
+                    Back to Departments
+                </a>
+            @else
+                <p>
+                    No initiatives have been given to your account yet.
+                    Please contact the administrator.
+                </p>
+            @endif
         </div>
     @endforelse
 </div>

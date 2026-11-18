@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -53,8 +54,16 @@ class AuthController extends Controller
 
         $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt(
+        // Only someone with the right password is told that the account is disabled.
+        $isDisabled = false;
+
+        if (Auth::attemptWhen(
             $credentials,
+            function (User $user) use (&$isDisabled) {
+                $isDisabled = ! $user->is_active;
+
+                return $user->is_active;
+            },
             $request->boolean('remember')
         )) {
             $request->session()->regenerate();
@@ -65,7 +74,7 @@ class AuthController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'email' => 'Invalid email or password.',
+            'email' => $isDisabled ? User::DISABLED_MESSAGE : 'Invalid email or password.',
         ]);
     }
 
