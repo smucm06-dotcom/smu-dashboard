@@ -314,3 +314,8 @@
         });
 </script>
 @endpush
+
+{{-- The banner's cards are numbered 1, 2, 3, 4, as on the initiative pages. --}}
+@push('styles')
+@include('departments.partials.topbar-numbers')
+@endpush
