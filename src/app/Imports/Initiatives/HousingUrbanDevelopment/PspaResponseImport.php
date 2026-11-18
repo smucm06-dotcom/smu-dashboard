@@ -13,10 +13,9 @@ use Illuminate\Support\Carbon;
 use RuntimeException;
 
 // The department's response file for Punjab Saaf Pani Authority (PSPA), one row per plant in one of our
-// reports. Every column is kept as typed. The file has two columns headed "Department Response": each is
-// the reply on the question just before it ("Non-functional" or "NO FOUND"). Issues, actions and replies
-// keep their line breaks; names, codes and dates lose them. Excel's "#N/A" in CODE is a blank. "SMU
-// Report Date" often lists several dates, so it is kept as typed; "Department Response Date" is a date.
+// reports. Every column is kept as typed. Issues and actions keep their line breaks; names, codes and
+// dates lose them. Excel's "#N/A" in CODE is a blank. "SMU Report Date" often lists several dates, so it
+// is kept as typed; "Department Response Date" is a date.
 class PspaResponseImport implements InitiativeFileImport
 {
     use ReadsHeadedSheet;
@@ -24,26 +23,15 @@ class PspaResponseImport implements InitiativeFileImport
 
     private const MAX_ROWS = 100000;
 
-    // The two "Department Response" columns are found separately, by the question before each.
     private const COLUMNS = [
         'source_sr' => ['sr no', 'sr', 's no', 'sno', 'serial no'],
         'site_name' => ['site name', 'name of site', 'site'],
         'plant_code' => ['code', 'plant code', 'site code'],
         'district' => ['district', 'district name'],
         'overall_issues' => ['overall issues', 'issues', 'issues identified'],
-        'action_taken' => ['action taken'],
+        'action_taken' => ['action taken', 'department response', 'response'],
         'smu_report_date' => ['smu report date', 'smu report dates', 'report date'],
         'response_date' => ['department response date', 'response date'],
-        'non_functional' => ['non functional'],
-        'not_found' => ['no found', 'not found'],
-    ];
-
-    private const RESPONSE_HEADING = 'department response';
-
-    // [question column => the column for the department's response on it]
-    private const RESPONSES = [
-        'non_functional' => 'non_functional_response',
-        'not_found' => 'not_found_response',
     ];
 
     // Short values, kept on one line: [column => the file's heading, the longest value the table keeps]
@@ -52,16 +40,12 @@ class PspaResponseImport implements InitiativeFileImport
         'plant_code' => ['CODE', 20],
         'district' => ['District', 100],
         'smu_report_date' => ['SMU Report Date', 255],
-        'non_functional' => ['Non-functional', 100],
-        'not_found' => ['NO FOUND', 100],
     ];
 
     // Paragraphs, kept with their line breaks.
     private const LONG_TEXT_COLUMNS = [
         'overall_issues' => 'Overall Issues',
         'action_taken' => 'Action Taken',
-        'non_functional_response' => 'Department Response (Non-functional)',
-        'not_found_response' => 'Department Response (NO FOUND)',
     ];
 
     // The longest a cell can be in Excel, well within the table's medium text.
@@ -76,7 +60,8 @@ class PspaResponseImport implements InitiativeFileImport
 
     public function prepare(string $path, string $extension): array
     {
-        $sheet = $this->readResponseSheet($path, $extension);
+        // Issues and the department's actions are paragraphs, so their line breaks are kept.
+        $sheet = $this->readHeadedSheet($this->reader->keepingLineBreaks(), $path, $extension, self::COLUMNS, ['district', 'action_taken'], self::MAX_ROWS);
         $dayFirst = $this->writesDayFirst($sheet['rows']);
 
         $rows = [];
@@ -128,71 +113,6 @@ class PspaResponseImport implements InitiativeFileImport
                 $chunk
             ));
         }
-    }
-
-    // The sheet's rows keyed by column, as readHeadedSheet gives them, with each "Department Response"
-    // column given to the question before it. Line breaks are kept, for the paragraphs.
-    private function readResponseSheet(string $path, string $extension): array
-    {
-        $required = ['district', 'action_taken'];
-        $findHeader = fn (array $rows) => $this->findHeading($rows, self::COLUMNS, $required);
-
-        $sheet = $this->reader->keepingLineBreaks()->readSheet($path, $extension, self::MAX_ROWS, fn (array $firstRows) => $findHeader($firstRows) !== null);
-
-        if ($sheet['rows'] === []) {
-            throw new RuntimeException('This file has no rows.');
-        }
-
-        $header = $findHeader($sheet['rows']);
-
-        if ($header === null) {
-            throw new RuntimeException($this->missingHeadingsMessage());
-        }
-
-        $columns = $header['columns'];
-
-        foreach ($sheet['rows'][$header['row']] as $index => $heading) {
-            if (! is_string($heading) || $this->normalizeHeading($heading) !== self::RESPONSE_HEADING) {
-                continue;
-            }
-
-            // The nearest question to the left. Without one, the first response not yet found.
-            $question = null;
-
-            foreach ($columns as $at => $key) {
-                if ($at < $index && isset(self::RESPONSES[$key]) && ($question === null || $at > $question[0])) {
-                    $question = [$at, $key];
-                }
-            }
-
-            $column = $question !== null ? self::RESPONSES[$question[1]] : null;
-
-            if ($column === null || in_array($column, $columns, true)) {
-                $column = collect(self::RESPONSES)->first(fn ($response) => ! in_array($response, $columns, true));
-            }
-
-            if ($column !== null) {
-                $columns[$index] = $column;
-            }
-        }
-
-        $rows = [];
-
-        foreach ($sheet['rows'] as $number => $values) {
-            if ($number <= $header['row']) {
-                continue;
-            }
-
-            $row = [];
-
-            foreach ($columns as $index => $key) {
-                $row[$key] = $values[$index] ?? null;
-            }
-
-            $rows[$number] = $row;
-        }
-
-        return ['rows' => $rows, 'sheet' => $sheet['sheet']];
     }
 
     // A name, code or date written over several lines ("Toba Tek↵Singh") is kept on one line.

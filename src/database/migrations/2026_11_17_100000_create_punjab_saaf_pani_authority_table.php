@@ -13,80 +13,72 @@ return new class extends Migration
         Schema::create('punjab_saaf_pani_authority', function (Blueprint $table) {
             $table->id();
 
-            // Excel: Date, District, Tehsil, Site Name
+            // Excel: Sr, Date, District, Tehsil, Site Name
+            // Sr is the row's number in the file, which is sorted by district, so it changes when a visit is
+            // added in between. It is kept as typed but is not what a visit is matched on.
+            $table->unsignedInteger('source_sr')->nullable();
             // The form's date and time. The earliest rows have a date only.
             $table->dateTime('visited_at');
             $table->string('district', 100)->nullable();
             $table->string('tehsil', 100)->nullable();
             $table->string('site_name')->nullable();
 
-            // Excel: Functionality of filtration plant, Total water taps, Functional water taps, Quality of water
-            // Functionality is Yes or No, or a sentence such as "Filtration plant completely closed".
+            // Excel: Functionality of filtration plant, Total water taps, Functional water taps, Images
+            // Functionality is "Functional", "Non Functional", or a sentence such as "Filtration plant inaccessible".
             $table->string('functionality')->nullable();
             $table->unsignedInteger('total_taps')->nullable();
             $table->unsignedInteger('functional_taps')->nullable();
-            $table->string('water_quality', 100)->nullable();
-
-            // The form's Yes / No questions, in the file's order, each answer as typed.
-            $table->string('worker_present', 100)->nullable();                  // Filtration plant worker present
-            $table->string('plant_cleaned', 100)->nullable();                   // Filtration plant cleaned
-            $table->string('lacks_repair_maintenance', 100)->nullable();        // Water filtration plant lacks repair and maintenance
-            $table->string('non_functional_long_time', 100)->nullable();        // Water filtration plant non-functional for a long time
-            $table->string('non_functional_taps', 100)->nullable();             // Non-functional water taps
-            $table->string('broken_taps', 100)->nullable();                     // Broken water taps
-            $table->string('broken_tiles', 100)->nullable();                    // Broken tiles
-            $table->string('filter_needs_replacement', 100)->nullable();        // Filter needs replacement
-            $table->string('poor_filtered_water', 100)->nullable();             // Poor quality of filtered water
-            $table->string('electricity_available', 100)->nullable();           // electricity available
-            $table->string('motor_pump_working', 100)->nullable();              // Motor pump working
-            $table->string('filter_working', 100)->nullable();                  // Filter working
-            $table->string('odor_in_water', 100)->nullable();                   // Odor in water
-            $table->string('found_at_stated_location', 100)->nullable();        // Filtration plant found at the stated location
-            $table->string('fenced_and_locked', 100)->nullable();               // Site fenced and locked, so functionality of the plant could not be assessed
-            $table->string('sewerage_non_functional', 100)->nullable();         // Sewerage system non-functional
-            $table->string('issues_found', 100)->nullable();                    // Issues found
-            $table->string('run_by_private_company', 100)->nullable();          // Filtration plant run by a private company
-            $table->string('operator_unpaid', 100)->nullable();                 // Plant operator unpaid for several months
-            $table->string('dilapidated_building', 100)->nullable();            // Dilapidated building
-            $table->string('meter_cut_by_wapda', 100)->nullable();              // Electricity meter connection cut off by WAPDA
-            $table->string('contractor_left_incomplete', 100)->nullable();      // Contractor left without completing the filtration plant work
-            $table->string('tank_leak', 100)->nullable();                       // Leak in water supply tank
-            $table->string('shut_down_early', 100)->nullable();                 // Plant shut down early instead of running during scheduled hours
-            $table->string('pending_electricity_bill', 100)->nullable();        // Pending electricity bill
-            $table->string('enclosure_door_stolen', 100)->nullable();           // Door of the tap enclosure has been stolen
-            $table->string('building_dilapidated_condition', 100)->nullable();  // Filtration plant building in dilapidated condition
-            $table->string('taps_stolen', 100)->nullable();                     // Taps stolen by thieves
-            $table->string('bill_paid_by_residents', 100)->nullable();          // Electricity bill paid by residents
-            $table->string('tank_has_lid', 100)->nullable();                    // Water tank has lid
-            $table->string('purifying_chemical_available', 100)->nullable();    // chemical for purifying the water is available
-            $table->string('development_work_in_progress', 100)->nullable();    // Development work in progress at the filtration plant
-            $table->string('operator_charging_citizens', 100)->nullable();      // Operator was charging citizens money for clean water
-            $table->string('illegally_occupied', 100)->nullable();              // Plant illegally occupied by an individual and not properly maintained or repaired
-            $table->string('taps_on_motor_no_filtration', 100)->nullable();     // Water taps connected directly to the motor and no filtration system installed
-            $table->string('electricity_theft', 100)->nullable();               // Electricity theft from the filtration plant connection
-            $table->string('connection_without_meter', 100)->nullable();        // Direct electricity connection taken from a pole without a meter
-            $table->string('rats_inside_plant', 100)->nullable();               // Rats found inside the plant, causing filth and highly unhygienic conditions
-            $table->string('key_held_by_vendor', 100)->nullable();              // Plant key held by a street vendor who uses the space for storage and does not run the plant regularly
-            $table->string('cooler_instead_of_taps', 100)->nullable();          // Water cooler installed instead of water taps
-            $table->string('dogs_obstructing_citizens', 100)->nullable();       // Dogs kept around the plant by an individual, obstructing citizens from getting water
-            $table->string('pfa_suspended_supply', 100)->nullable();            // Punjab Food Authority suspended water supply due to substandard water quality
-            $table->string('bore_not_working', 100)->nullable();                // Plant bore not working properly and not drawing water, new bore needed as filter turns black within days
-            $table->string('pipeline_leaking', 100)->nullable();                // Employee reported plant non-functional for fifteen days pipeline leaking at multiple points, ...
-            $table->string('fire_damage', 100)->nullable();                     // Fire damaged the building, equipment and other material
-
-            // Excel: Remarks, Images. Remarks are paragraphs, often in Urdu, kept with their line breaks.
-            // Images are the visit's photo links, one after another.
-            $table->mediumText('remarks')->nullable();
+            // The visit's photo links, one after another.
             $table->mediumText('images')->nullable();
 
-            // Excel: Lat, Long. Blank when a coordinate can't be used. The file gives up to 8 decimal
-            // places, so all 8 are kept.
+            // The form's Yes / No questions, in the file's order, each answer as typed.
+            $table->string('plant_unclean', 100)->nullable();                 // Uncleanliness of filtration plant
+            $table->string('no_electricity', 100)->nullable();                // Unavailability of electricity
+            $table->string('meter_disconnected', 100)->nullable();            // Electricity meter/connection disconnected
+            $table->string('pending_electricity_bill', 100)->nullable();      // Pending electricity bill
+            $table->string('motor_pump_non_functional', 100)->nullable();     // Non-functional motor/pump
+            $table->string('non_functional_long', 100)->nullable();           // Filtration plant non-functional for long
+            $table->string('operator_present', 100)->nullable();              // Operator/worker was present
+            $table->string('private_company', 100)->nullable();               // Filtration plant is operating under a private company
+            $table->string('found_at_location', 100)->nullable();             // Filtration plant found on the said location
+            $table->string('lacks_repair_maintenance', 100)->nullable();      // Lack of repair and maintenance of filtration plant
+            $table->string('tank_leakage', 100)->nullable();                  // Leakage in the water supply tank
+            $table->string('broken_floor_tap_area', 100)->nullable();         // Broken floor and water tap area
+            $table->string('tank_cover', 100)->nullable();                    // cover over water tank
+            $table->string('contractor_left_incomplete', 100)->nullable();    // The contractor left without completing the filtration plant work
+            $table->string('poor_water_quality', 100)->nullable();            // Poor quality of water
+            $table->string('smell_in_water', 100)->nullable();                // Smell in water
+            $table->string('non_functional_taps', 100)->nullable();           // Non-functional water taps
+            $table->string('broken_taps', 100)->nullable();                   // Broken water taps
+            $table->string('filter_needs_replacement', 100)->nullable();      // The filter needs to be replaced
+            $table->string('filter_non_functional', 100)->nullable();         // Non-functional filter (coarse/fine)
+            $table->string('room_and_filling_area_closed', 100)->nullable();  // Filtration plant's room and water filling area was closed
+            $table->string('bill_paid_by_residents', 100)->nullable();        // Electricity bill payment by residents
+            $table->string('operator_charging_citizens', 100)->nullable();    // Operator was charging amount from citizens for clean water
+            $table->string('taps_stolen', 100)->nullable();                   // The water taps have been taken away by thieves
+            $table->string('door_stolen', 100)->nullable();                   // The filtration plant door has been stolen
+            $table->string('shut_down_early', 100)->nullable();               // The filtration plant is shut down early instead of operating according to its scheduled operating hours.
+            $table->string('operator_unpaid', 100)->nullable();               // The plant operator has not received a salary for several months
+            $table->string('dilapidated_building', 100)->nullable();          // dilapidated building of filtration plant
+            $table->string('illegally_occupied', 100)->nullable();            // The filtration plant has been illegally occupied by an individual, ...
+            $table->string('dogs_around_plant', 100)->nullable();             // Someone has kept several dogs around the filtration plant, ...
+            $table->string('rats_inside_plant', 100)->nullable();             // Rats have been found inside the filtration plant setup, ...
+            $table->string('non_operational_15_days', 100)->nullable();       // The filtration plant has remained non-operational for the past 15 days. ...
+            $table->string('key_held_by_vendor', 100)->nullable();            // The filtration plant key is held by a street vendor (Chabri Shop), ...
+            $table->string('taps_on_motor_no_filtration', 100)->nullable();   // Water taps are directly connected to the motor, and no filtration system is installed.
+            $table->string('pfa_suspended_supply', 100)->nullable();          // The Punjab Food Authority has suspended the water supply due to substandard water quality.
+            $table->string('bore_not_working', 100)->nullable();              // The filtration plant bore is not functioning properly ...
+            $table->string('electricity_theft', 100)->nullable();             // Theft of Electricity from the Filtration Plant's Power Connection
+            $table->string('direct_pole_connection', 100)->nullable();        // Electricity theft has been committed at the filtration plant by taking a direct connection from the electric pole.
+            $table->string('cooler_instead_of_taps', 100)->nullable();        // Water cooler has been installed at this filtration plant instead of water taps
+
+            // Excel: lat, long. Blank when a coordinate can't be used. Up to 8 decimal places are kept.
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
 
             // Not in the file: the row's number (1, 2, 3) among the rows with the same Date, in the order of
-            // their values. The file has no plant code, and many visits were entered with the same Date, so
-            // numbering them keeps every row.
+            // their values. Many visits were entered with the same Date, and Sr changes as the file grows,
+            // so numbering them keeps every row.
             $table->unsignedInteger('entry')->default(1);
 
             $table->timestamps();

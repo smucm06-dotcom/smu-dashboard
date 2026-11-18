@@ -20,7 +20,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             // Excel: Sr. No., Site Name, CODE, District, Overall Issues, Action Taken, SMU Report Date,
-            // Department Response Date, Non-functional, Department Response, NO FOUND, Department Response
+            // Department Response Date
             $table->unsignedInteger('source_sr')->nullable();
             $table->string('site_name')->nullable();
             // The plant's code in the department list. Blank where the file shows Excel's "#N/A".
@@ -32,14 +32,6 @@ return new class extends Migration
             // As typed: often several dates in one cell ("01.01.2026 02.01.2026 03.01.2026").
             $table->string('smu_report_date')->nullable();
             $table->date('response_date')->nullable();
-            // Was the plant non-functional, and the department's response on that (the first "Department
-            // Response" column).
-            $table->string('non_functional', 100)->nullable();
-            $table->mediumText('non_functional_response')->nullable();
-            // Was the plant not found ("NO FOUND"), and the department's response on that (the second
-            // "Department Response" column).
-            $table->string('not_found', 100)->nullable();
-            $table->mediumText('not_found_response')->nullable();
 
             $table->timestamps();
 

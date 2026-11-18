@@ -69,6 +69,14 @@ abstract class PsrpVisitImport
         return null;
     }
 
+    // What rows sharing a key are put in order by before they are numbered: all their values. A page
+    // whose file has a column that is only the row's place in the file (PSPA's Sr) leaves it out, so
+    // adding a row in between doesn't renumber the others.
+    protected function repeatOrder(array $record): string
+    {
+        return implode("\x1F", $record);
+    }
+
     // A row's key, as text, from its key columns.
     protected function keyOf(array $record): string
     {
@@ -191,7 +199,7 @@ abstract class PsrpVisitImport
         // Rows sharing a key are numbered 1, 2, 3 in the order of their values, not their place in the
         // file, so a file sorted another way (such as the records CSV) still matches the same rows.
         foreach ($repeats as $rows) {
-            usort($rows, fn (array $a, array $b) => strcmp(implode("\x1F", $a), implode("\x1F", $b)));
+            usort($rows, fn (array $a, array $b) => strcmp($this->repeatOrder($a), $this->repeatOrder($b)));
 
             foreach ($rows as $index => $record) {
                 $record[$repeatColumn] = (string) ($index + 1);

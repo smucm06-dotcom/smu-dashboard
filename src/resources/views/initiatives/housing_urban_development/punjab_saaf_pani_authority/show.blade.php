@@ -67,17 +67,15 @@
 @include('initiatives.school_education.psrp_shared.findings-styles')
 @include('initiatives.school_education.psrp_shared.records-styles')
 @php
-    // Remarks and photo links can run to hundreds of characters. In the table they are cut short; the
-    // visit's window shows them in full, remarks with their line breaks. Columns are found by name.
-    $columnKeys = array_keys($table['columns']);
-    $longColumns = array_filter([array_search('remarks', $columnKeys, true), array_search('images', $columnKeys, true)], 'is_int');
+    // Photo links can run to hundreds of characters. In the table they are cut short; the visit's window
+    // shows them in full. The column is found by name.
+    $imagesColumn = array_search('images', array_keys($table['columns']), true);
 @endphp
+@if (is_int($imagesColumn))
 <style>
-    @foreach ($longColumns as $index)
-    #psrpRecordsBody .psrp-table td:nth-child({{ $index + 1 }}) { max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
-    @endforeach
-    #psrpVisitDialog .psrp-dialog-fields dd { white-space: pre-line; }
+    #psrpRecordsBody .psrp-table td:nth-child({{ $imagesColumn + 1 }}) { max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
 </style>
+@endif
 @endpush
 
 @push('scripts')
