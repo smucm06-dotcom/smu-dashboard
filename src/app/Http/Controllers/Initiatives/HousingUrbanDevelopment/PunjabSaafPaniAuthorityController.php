@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers\Initiatives\HousingUrbanDevelopment;
 
+use App\Dashboards\Initiatives\HousingUrbanDevelopment\PspaDashboard;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\Concerns\ManagesPsrpVisits;
 use App\Imports\Initiatives\HousingUrbanDevelopment\PspaVisitImport;
 use App\Models\Initiative;
-use App\Models\InitiativeFile;
-use App\Models\Initiatives\HousingUrbanDevelopment\PspaPlant;
-use App\Models\Initiatives\HousingUrbanDevelopment\PspaResponse;
 use App\Models\Initiatives\HousingUrbanDevelopment\PspaVisit;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
-// Punjab Saaf Pani Authority (PSPA), under Housing Urban Development & Public Health Engineering. Until its
-// design arrives, the page has the banner, the four uploads and the records table, as on the other
-// initiative pages before theirs.
+// Punjab Saaf Pani Authority (PSPA), under Housing Urban Development & Public Health Engineering: the
+// Water Filtration Plants design, with the four uploads and the records table below it, as on the other
+// initiative pages.
 class PunjabSaafPaniAuthorityController extends Controller
 {
     // Upload and CSV download work the same as on the other initiative pages.
@@ -35,7 +33,6 @@ class PunjabSaafPaniAuthorityController extends Controller
         'functionality' => ['label' => 'Functionality', 'type' => 'text'],
         'total_taps' => ['label' => 'Total water taps', 'type' => 'number'],
         'functional_taps' => ['label' => 'Functional water taps', 'type' => 'number'],
-        'images' => ['label' => 'Images', 'type' => 'text'],
         'plant_unclean' => ['label' => 'Plant unclean', 'type' => 'text'],
         'no_electricity' => ['label' => 'No electricity', 'type' => 'text'],
         'meter_disconnected' => ['label' => 'Meter disconnected', 'type' => 'text'],
@@ -75,9 +72,10 @@ class PunjabSaafPaniAuthorityController extends Controller
         'electricity_theft' => ['label' => 'Electricity theft', 'type' => 'text'],
         'direct_pole_connection' => ['label' => 'Direct connection from pole', 'type' => 'text'],
         'cooler_instead_of_taps' => ['label' => 'Water cooler instead of taps', 'type' => 'text'],
+        'images' => ['label' => 'Image Path', 'type' => 'text'],
         // Shown in full; a number format would round them.
-        'latitude' => ['label' => 'lat', 'type' => 'text'],
-        'longitude' => ['label' => 'long', 'type' => 'text'],
+        'latitude' => ['label' => 'Latitude', 'type' => 'text'],
+        'longitude' => ['label' => 'Longitude', 'type' => 'text'],
     ];
 
     // Everything recorded for a visit, shown when its row is opened, under the visit file's own headings.
@@ -129,9 +127,9 @@ class PunjabSaafPaniAuthorityController extends Controller
         'electricity_theft' => "Theft of Electricity from the Filtration Plant's Power Connection",
         'direct_pole_connection' => 'Electricity theft has been committed at the filtration plant by taking a direct connection from the electric pole.',
         'cooler_instead_of_taps' => 'Water cooler has been installed at this filtration plant instead of water taps',
-        'images' => 'Images',
-        'latitude' => 'lat',
-        'longitude' => 'long',
+        'images' => 'Image Path',
+        'latitude' => 'Latitude',
+        'longitude' => 'Longitude',
     ];
 
     // The form's Yes / No questions, from "Uncleanliness of filtration plant" on.
@@ -145,6 +143,19 @@ class PunjabSaafPaniAuthorityController extends Controller
         'dogs_around_plant', 'rats_inside_plant', 'non_operational_15_days', 'key_held_by_vendor',
         'taps_on_motor_no_filtration', 'pfa_suspended_supply', 'bore_not_working', 'electricity_theft',
         'direct_pole_connection', 'cooler_instead_of_taps',
+    ];
+
+    // The map's Download: the plants on the map as rows of our visit file, under its own headings, in its
+    // order and formats. The Yes / No questions, the photos and the location follow these (see fileColumns).
+    private const FILE_COLUMNS = [
+        'source_sr' => ['label' => 'Sr', 'type' => 'number'],
+        'visited_at' => ['label' => 'Date', 'type' => 'date', 'excel_format' => 'mm-dd-yy'],
+        'district' => ['label' => 'District', 'type' => 'text'],
+        'tehsil' => ['label' => 'Tehsil', 'type' => 'text'],
+        'site_name' => ['label' => 'Site Name', 'type' => 'text'],
+        'functionality' => ['label' => 'Functionality of filtration plant', 'type' => 'text'],
+        'total_taps' => ['label' => 'Total water taps', 'type' => 'number'],
+        'functional_taps' => ['label' => 'Functional water taps', 'type' => 'number'],
     ];
 
     private const PER_PAGE_OPTIONS = [10, 25, 50, 100];
@@ -194,12 +205,46 @@ class PunjabSaafPaniAuthorityController extends Controller
                 ->header('Vary', self::RECORDS_HEADER);
         }
 
+        // The controller is called with the request and initiative only, so the dashboard is made here.
         return response()
             ->view('initiatives.housing_urban_development.punjab_saaf_pani_authority.show', $records + [
-                'topbar' => $this->topbar($initiative),
+                'topbar' => $this->topbar($initiative, app(PspaDashboard::class)),
                 'files' => $initiative->filesByType(),
             ])
             ->header('Vary', self::RECORDS_HEADER);
+    }
+
+    // Everything the page's figures, map and tables are worked out from.
+    public function data(Request $request, Initiative $initiative, PspaDashboard $dashboard)
+    {
+        $this->ensureThisInitiative($initiative);
+
+        return $this->dashboardData($request, $dashboard);
+    }
+
+    // The plants on the map for the chosen finding or response, as rows of our visit file.
+    public function mapDownload(Request $request, Initiative $initiative)
+    {
+        $this->ensureThisInitiative($initiative);
+
+        return $this->downloadMapSchools($request, PspaVisit::class, $this->fileColumns(), 'water-filtration-plants');
+    }
+
+    // Every column of the visit file: the first ones, the Yes / No questions under the file's own
+    // wording, then the photos and the location.
+    private function fileColumns(): array
+    {
+        $columns = self::FILE_COLUMNS;
+        foreach (self::YES_NO_COLUMNS as $column) {
+            $columns[$column] = ['label' => self::VISIT_DETAILS[$column], 'type' => 'text'];
+        }
+
+        // The location as numbers, as in the file.
+        return $columns + [
+            'images' => ['label' => 'Image Path', 'type' => 'text'],
+            'latitude' => ['label' => 'Latitude', 'type' => 'number'],
+            'longitude' => ['label' => 'Longitude', 'type' => 'number'],
+        ];
     }
 
     public function export(Request $request, Initiative $initiative)
@@ -222,20 +267,32 @@ class PunjabSaafPaniAuthorityController extends Controller
         return $this->uploadVisits($request, $initiative, $import);
     }
 
-    // The four cards, numbered 1 to 4 by the shared styles, counted from the uploaded files:
-    // the plants on the department list, the rows of our visit file, our report PDFs and the rows of
-    // the department's latest response file.
-    private function topbar(Initiative $initiative): array
+    // The design's four cards, numbered 1 to 4 by the page's styles, with the line under each. They show
+    // all of Punjab here, and the page's script keeps them in step with its filters. "Reported to the
+    // department" is the design's own count: the plants in the SMU reports of the response file.
+    private function topbar(Initiative $initiative, PspaDashboard $dashboard): array
     {
+        $cards = $dashboard->headline($dashboard->data());
+
+        $labels = [
+            'total' => 'Total plants',
+            'visited' => 'Visited by SMU',
+            'reports' => 'Reported to the department',
+            'replied' => 'Department responses',
+        ];
+
+        $stats = [];
+        foreach ($labels as $key => $label) {
+            [$value, $info] = $cards[$key];
+            $stats[] = ['label' => $label, 'value' => $value, 'info' => $info, 'id' => 'c-'.$key];
+        }
+
         return [
             'title' => $initiative->name,
-            'description' => 'Monitor field inspection data and implementation progress for this initiative.',
-            'stats' => [
-                ['label' => 'Total filtration plants', 'value' => PspaPlant::count(), 'id' => 'c-total'],
-                ['label' => 'Visited by SMU', 'value' => PspaVisit::count(), 'id' => 'c-visited'],
-                ['label' => 'Reports sent to department', 'value' => $initiative->files()->where('type', InitiativeFile::TYPE_OUR_REPORT)->count(), 'id' => 'c-reports'],
-                ['label' => 'Department responses', 'value' => PspaResponse::count(), 'id' => 'c-replied'],
-            ],
+            // The design's opening paragraph, in two lines.
+            'description' => "Water filtration plants give citizens free, clean drinking water from public taps. SMU field teams make unannounced visits to the plants in PSPA's list, "
+                .'check whether each plant is working, its operator present, its taps and filters working and the plant clean, and report the problems to PSPA, which responds with the action taken.',
+            'stats' => $stats,
         ];
     }
 

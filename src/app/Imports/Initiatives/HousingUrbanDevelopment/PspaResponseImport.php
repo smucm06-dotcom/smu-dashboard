@@ -58,6 +58,29 @@ class PspaResponseImport implements InitiativeFileImport
     {
     }
 
+    // Issues and actions exactly as typed, "N/A" and "None" too: the page reads a department's "N/A" as
+    // an answer that skips the point, and an empty cell as no answer yet. Only an empty cell is blank.
+    private function fittingParagraph(mixed $value, int $row, string $label, array &$problems): ?string
+    {
+        $text = match (true) {
+            $value instanceof DateTimeInterface => $value->format('Y-m-d'),
+            is_float($value) && floor($value) === $value && abs($value) < 1e15 => (string) (int) $value,
+            is_scalar($value) && ! is_bool($value) => (string) $value,
+            default => '',
+        };
+        $text = preg_replace('/^[\s\x{00A0}]+|[\s\x{00A0}]+$/u', '', $text) ?? trim($text);
+
+        if ($text === '') {
+            return null;
+        }
+
+        if (mb_strlen($text) > self::LONG_TEXT) {
+            $problems[] = "Row {$row}, {$label}: longer than ".self::LONG_TEXT.' characters.';
+        }
+
+        return $text;
+    }
+
     public function prepare(string $path, string $extension): array
     {
         // Issues and the department's actions are paragraphs, so their line breaks are kept.
@@ -81,7 +104,7 @@ class PspaResponseImport implements InitiativeFileImport
             }
 
             foreach (self::LONG_TEXT_COLUMNS as $column => $label) {
-                $values[$column] = $this->fittingText($row[$column] ?? null, self::LONG_TEXT, $number, $label, $problems);
+                $values[$column] = $this->fittingParagraph($row[$column] ?? null, $number, $label, $problems);
             }
 
             $values['response_date'] = $this->readDate($row['response_date'] ?? null, $dayFirst, $number, 'Department Response Date', $problems);
