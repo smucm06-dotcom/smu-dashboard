@@ -13,6 +13,7 @@ class PspaVisit extends Model
     {
         // The answers stay text, as typed.
         return [
+            'source_sr' => 'integer',
             'visited_at' => 'datetime',
             'total_taps' => 'integer',
             'functional_taps' => 'integer',
