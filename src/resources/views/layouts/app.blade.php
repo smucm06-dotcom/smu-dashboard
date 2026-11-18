@@ -726,6 +726,28 @@
             .topbar-stat-info { display: none; }
         }
 
+        /* A page with no statistics has one row, with its title in the middle of the banner. */
+
+        .app-topbar:not(:has(.topbar-stats-grid)) {
+
+            grid-template-rows: auto;
+
+            row-gap: 0;
+
+        }
+
+        .app-topbar:not(:has(.topbar-stats-grid)) .topbar-left {
+
+            align-items: center;
+
+        }
+
+        .app-topbar:not(:has(.topbar-stats-grid)) .topbar-right {
+
+            grid-row: 1;
+
+        }
+
         /* iPhones zoom the whole page when a focused field's text is under 16px. */
         @media (max-width: 768px) {
             input,

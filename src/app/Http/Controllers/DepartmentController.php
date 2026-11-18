@@ -4,14 +4,24 @@ use App\Models\Department;
 use App\Models\Initiative;
 use App\Models\InitiativeFile;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DepartmentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // A department user has only one department, so they go straight to it.
+        if (! $request->user()->isAdmin()) {
+            $department = $request->user()->department();
+
+            abort_unless($department, 403);
+
+            return redirect()->route('departments.show', $department);
+        }
+
         $departments = Department::orderBy('name')->get();
 
         // The initiatives switched on, which are the ones with a page. The visits and reports count these only.
@@ -42,16 +52,18 @@ class DepartmentController extends Controller
         return view('departments.index', compact('departments', 'topbar'));
     }
 
-    public function show(Department $department)
+    public function show(Request $request, Department $department)
     {
         // Only active initiatives are listed. Every initiative starts inactive
-        // (the migration's default) until it is switched on.
+        // (the migration's default) until it is switched on. A department user sees only the
+        // initiatives given to them, and every card below counts those only.
         $initiatives = $department->initiatives()
+            ->visibleTo($request->user())
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
-        $totalInitiatives = $department->initiatives()->count();
+        $totalInitiatives = $department->initiatives()->visibleTo($request->user())->count();
 
         // Visits, reports and recent visits count this department's own initiatives, the ones listed here.
         $topbar = [

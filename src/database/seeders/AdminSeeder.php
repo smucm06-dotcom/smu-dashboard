@@ -9,17 +9,20 @@ use RuntimeException;
 
 class AdminSeeder extends Seeder
 {
+    public const EMAIL = 'admin@smu.local';
+
+    // Runs again on every db:seed, so it must not reset a password that has since been changed.
     public function run(): void
     {
-        User::updateOrCreate(
-            [
-                'email' => 'admin@smu.local',
-            ],
-            [
-                'name' => 'SMU Administrator',
-                'password' => Hash::make(env('ADMIN_PASSWORD') ?: throw new RuntimeException('Set ADMIN_PASSWORD in src/.env before seeding.')),
-                'email_verified_at' => now(),
-            ]
-        );
+        if (User::where('email', self::EMAIL)->exists()) {
+            return;
+        }
+
+        User::create([
+            'email' => self::EMAIL,
+            'name' => 'SMU Administrator',
+            'password' => Hash::make(env('ADMIN_PASSWORD') ?: throw new RuntimeException('Set ADMIN_PASSWORD in src/.env before seeding.')),
+            'email_verified_at' => now(),
+        ]);
     }
 }
