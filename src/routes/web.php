@@ -11,6 +11,7 @@ use App\Http\Controllers\Initiatives\SchoolEducation\PsrpPhase2Controller;
 use App\Http\Controllers\Initiatives\SchoolEducation\SchoolMealProgramController;
 use App\Http\Controllers\Initiatives\LocalGovernment\UcMcOfficeServiceDeliveryController;
 use App\Http\Controllers\Initiatives\SpecialEducation\SpecialEducationInstitutesController;
+use App\Http\Controllers\Initiatives\HousingUrbanDevelopment\PunjabSaafPaniAuthorityController;
 // Login routes
 Route::get('/', [AuthController::class, 'showLogin'])
     ->name('home');
@@ -120,6 +121,13 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/initiatives/{initiative}/uc-mc-office-service-delivery/import', [UcMcOfficeServiceDeliveryController::class, 'import'])
     ->name('initiatives.uc-mc-office-service-delivery.import');
+
+    // Punjab Saaf Pani Authority (Housing Urban Development & Public Health Engineering)
+    Route::get('/initiatives/{initiative}/punjab-saaf-pani-authority/export', [PunjabSaafPaniAuthorityController::class, 'export'])
+    ->name('initiatives.punjab-saaf-pani-authority.export');
+
+    Route::post('/initiatives/{initiative}/punjab-saaf-pani-authority/import', [PunjabSaafPaniAuthorityController::class, 'import'])
+    ->name('initiatives.punjab-saaf-pani-authority.import');
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])
