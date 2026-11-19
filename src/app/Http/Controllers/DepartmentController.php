@@ -13,19 +13,27 @@ class DepartmentController extends Controller
 {
     public function index(Request $request)
     {
-        // A department user has only one department, so they go straight to it.
-        if (! $request->user()->isAdmin()) {
-            $department = $request->user()->department();
+        $user = $request->user();
 
-            abort_unless($department, 403);
+        // A department user sees only their own departments, and goes straight to it when they have one.
+        if (! $user->isAdmin()) {
+            $mine = $user->departments();
 
-            return redirect()->route('departments.show', $department);
+            abort_if($mine->isEmpty(), 403);
+
+            if ($mine->count() === 1) {
+                return redirect()->route('departments.show', $mine->first());
+            }
         }
 
-        $departments = Department::orderBy('name')->get();
+        $departments = $user->isAdmin() ? Department::orderBy('name')->get() : $user->departments();
 
-        // The initiatives switched on, which are the ones with a page. The visits and reports count these only.
-        $initiatives = Initiative::where('is_active', true)->get(['id', 'department_id', 'table_name']);
+        // The initiatives switched on, which are the ones with a page, that this user can open. The visits
+        // and reports count these only.
+        $initiatives = Initiative::where('is_active', true)
+            ->visibleTo($user)
+            ->whereIn('department_id', $departments->pluck('id'))
+            ->get(['id', 'department_id', 'table_name']);
 
         $topbar = [
             'title' => 'Special Monitoring Unit',
@@ -33,7 +41,7 @@ class DepartmentController extends Controller
             // Numbered 1 to 4 by this page's styles, like the initiative pages' cards.
             'stats' => [
                 ['label' => 'Departments', 'value' => $departments->count()],
-                ['label' => 'Departments with Initiatives', 'value' => Initiative::distinct()->count('department_id')],
+                ['label' => 'Departments with Initiatives', 'value' => Initiative::visibleTo($user)->whereIn('department_id', $departments->pluck('id'))->distinct()->count('department_id')],
                 [
                     'label' => 'Field visits by SMU',
                     'value' => $this->fieldVisits($initiatives),

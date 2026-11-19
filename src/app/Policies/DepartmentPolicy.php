@@ -10,6 +10,6 @@ class DepartmentPolicy
 {
     public function view(User $user, Department $department): bool
     {
-        return $user->department()?->is($department) ?? false;
+        return $user->belongsToDepartment($department);
     }
 }

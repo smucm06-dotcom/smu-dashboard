@@ -124,11 +124,13 @@ Route::middleware(['auth', 'account.active'])->group(function () {
             Route::post('/punjab-saaf-pani-authority/map-download', [PunjabSaafPaniAuthorityController::class, 'mapDownload'])
                 ->name('initiatives.punjab-saaf-pani-authority.map-download');
 
+            // Anyone who can open the initiative may upload a report PDF. The controller lets only admins
+            // upload the other files (InitiativeFileController::store).
+            Route::post('/files', [InitiativeFileController::class, 'store'])
+                ->name('initiatives.files.store');
+
             // Uploading and deleting: admins only.
             Route::middleware('can:manage,initiative')->group(function () {
-                Route::post('/files', [InitiativeFileController::class, 'store'])
-                    ->name('initiatives.files.store');
-
                 Route::delete('/files/{file}', [InitiativeFileController::class, 'destroy'])
                     ->scopeBindings()
                     ->name('initiatives.files.destroy');

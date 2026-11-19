@@ -6,13 +6,17 @@
 
 @section('content')
 
-@php $isAdmin = auth()->user()->isAdmin(); @endphp
+@php
+    $isAdmin = auth()->user()->isAdmin();
+    // Back to the list of departments, for admins and for users with more than one department.
+    $canGoBack = $isAdmin || auth()->user()->departments()->count() > 1;
+@endphp
 
 <!-- PAGE HEADER -->
 <div class="initiatives-header">
     <div class="initiatives-heading">
-        {{-- A department user has only this department, so there is nothing to go back to. --}}
-        @if ($isAdmin)
+        {{-- A user with only this department has nothing to go back to. --}}
+        @if ($canGoBack)
             <a href="{{ route('departments.index') }}" class="back-link">
                 <i data-lucide="arrow-left"></i>
                 Back to Departments
@@ -79,6 +83,11 @@
                     No initiatives have been given to your account yet.
                     Please contact the administrator.
                 </p>
+                @if ($canGoBack)
+                    <a href="{{ route('departments.index') }}" class="empty-back">
+                        Back to Departments
+                    </a>
+                @endif
             @endif
         </div>
     @endforelse

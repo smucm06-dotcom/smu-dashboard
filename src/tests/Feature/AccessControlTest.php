@@ -83,7 +83,8 @@ class AccessControlTest extends TestCase
             'email' => 'ali@example.test',
             'password' => 'Secret1234',
             'password_confirmation' => 'Secret1234',
-            'role' => 'sed',
+            'access' => 'departments',
+            'departments' => ['sed'],
             'permissions' => [$this->phaseOne->permission->id],
         ], $changes);
     }
@@ -180,7 +181,8 @@ class AccessControlTest extends TestCase
     public static function writeRoutes(): array
     {
         return [
-            'upload file' => ['post', fn ($self, $i) => route('initiatives.files.store', $i)],
+            'upload department list' => ['post', fn ($self, $i) => route('initiatives.files.store', [$i, 'type' => InitiativeFile::TYPE_DEPARTMENT_LIST])],
+            'upload department response' => ['post', fn ($self, $i) => route('initiatives.files.store', [$i, 'type' => InitiativeFile::TYPE_DEPARTMENT_RESPONSE])],
             'delete file' => ['delete', fn ($self, $i) => route('initiatives.files.destroy', [$i, $self->storedFile($i)])],
             'phase 1 import' => ['post', fn ($self, $i) => route('initiatives.psrp-phase-1.import', $i)],
             'phase 2 import' => ['post', fn ($self, $i) => route('initiatives.psrp-phase-2.import', $i)],
@@ -262,19 +264,70 @@ class AccessControlTest extends TestCase
             ->assertSee('app-sidebar', false);
     }
 
-    public function test_upload_and_delete_controls_are_only_shown_to_admins(): void
+    public function test_a_department_user_can_upload_a_report_pdf_but_not_delete_it(): void
+    {
+        $pdf = UploadedFile::fake()->createWithContent('field-report.pdf', "%PDF-1.4\n%test\n");
+
+        $this->actingAs($this->viewer)
+            ->post(route('initiatives.files.store', $this->phaseOne), ['type' => InitiativeFile::TYPE_OUR_REPORT, 'file' => $pdf])
+            ->assertRedirect()
+            ->assertSessionHas('initiativeFileSaved');
+
+        $file = InitiativeFile::where('initiative_id', $this->phaseOne->id)->where('type', InitiativeFile::TYPE_OUR_REPORT)->firstOrFail();
+
+        $this->assertSame($this->viewer->id, $file->uploaded_by);
+        $this->assertTrue(Storage::disk('local')->exists($file->stored_path));
+
+        $this->actingAs($this->viewer)
+            ->get(route('initiatives.files.download', [$this->phaseOne, $file]))
+            ->assertOk();
+
+        $this->actingAs($this->viewer)
+            ->delete(route('initiatives.files.destroy', [$this->phaseOne, $file]))
+            ->assertForbidden();
+
+        $this->assertModelExists($file);
+        $this->assertTrue(Storage::disk('local')->exists($file->stored_path));
+    }
+
+    public function test_a_department_user_cannot_upload_a_report_where_they_have_no_access(): void
+    {
+        foreach ([$this->phaseTwo, $this->solar] as $initiative) {
+            $this->actingAs($this->viewer)
+                ->post(route('initiatives.files.store', $initiative), ['type' => InitiativeFile::TYPE_OUR_REPORT, 'file' => UploadedFile::fake()->createWithContent('r.pdf', "%PDF-1.4\n")])
+                ->assertForbidden();
+        }
+
+        $this->assertSame(0, InitiativeFile::count());
+    }
+
+    public function test_a_department_user_cannot_upload_a_pdf_as_a_department_response(): void
+    {
+        $this->actingAs($this->viewer)
+            ->post(route('initiatives.files.store', $this->phaseOne), ['type' => InitiativeFile::TYPE_DEPARTMENT_RESPONSE, 'file' => UploadedFile::fake()->createWithContent('letter.pdf', "%PDF-1.4\n")])
+            ->assertForbidden();
+
+        $this->assertSame(0, InitiativeFile::count());
+    }
+
+    public function test_viewers_get_only_the_report_upload_and_no_delete_controls(): void
     {
         $this->storedFile($this->phaseOne);
 
-        $this->actingAs($this->viewer)->get(route('initiatives.show', $this->phaseOne))
+        $page = $this->actingAs($this->viewer)->get(route('initiatives.show', $this->phaseOne))
             ->assertOk()
             ->assertDontSee('Upload CSV')
-            ->assertDontSee('Upload report')
+            ->assertSee('Upload report')
             ->assertDontSee('Delete report.pdf')
-            ->assertDontSee('class="ifile-form"', false)
             ->assertSee('Visit files')
-            ->assertSee('Reports')
+            ->assertSee('Department responses')
             ->assertSee('report.pdf');
+
+        // One upload form, the report's; none for visits, the department list or responses.
+        $this->assertSame(1, substr_count($page->getContent(), 'class="ifile-form"'));
+        $this->assertStringContainsString('name="type" value="'.InitiativeFile::TYPE_OUR_REPORT.'"', $page->getContent());
+        $this->assertStringNotContainsString('name="type" value="'.InitiativeFile::TYPE_DEPARTMENT_LIST.'"', $page->getContent());
+        $this->assertStringNotContainsString('name="type" value="'.InitiativeFile::TYPE_DEPARTMENT_RESPONSE.'"', $page->getContent());
 
         $this->actingAs($this->admin)->get(route('initiatives.show', $this->phaseOne))
             ->assertOk()
@@ -395,7 +448,7 @@ class AccessControlTest extends TestCase
     public function test_an_admin_user_gets_no_initiative_permissions(): void
     {
         $this->actingAs($this->admin)
-            ->post(route('users.store'), $this->validUser(['role' => Role::ADMIN, 'permissions' => [$this->solar->permission->id]]))
+            ->post(route('users.store'), $this->validUser(['access' => 'admin', 'permissions' => [$this->solar->permission->id]]))
             ->assertRedirect(route('users.index'));
 
         $user = User::where('email', 'ali@example.test')->firstOrFail();
@@ -413,8 +466,11 @@ class AccessControlTest extends TestCase
         $this->post(route('users.store'), $this->validUser(['password' => 'short', 'password_confirmation' => 'short']))->assertSessionHasErrors('password');
         $this->post(route('users.store'), $this->validUser(['password' => 'onlyletters', 'password_confirmation' => 'onlyletters']))->assertSessionHasErrors('password');
         $this->post(route('users.store'), $this->validUser(['password_confirmation' => 'Different1234']))->assertSessionHasErrors('password');
-        $this->post(route('users.store'), $this->validUser(['role' => 'nope']))->assertSessionHasErrors('role');
-        $this->post(route('users.store'), $this->validUser(['role' => '']))->assertSessionHasErrors('role');
+        $this->post(route('users.store'), $this->validUser(['departments' => ['nope']]))->assertSessionHasErrors('departments.0');
+        $this->post(route('users.store'), $this->validUser(['departments' => [Role::ADMIN]]))->assertSessionHasErrors('departments.0');
+        $this->post(route('users.store'), $this->validUser(['departments' => []]))->assertSessionHasErrors('departments');
+        $this->post(route('users.store'), $this->validUser(['access' => '']))->assertSessionHasErrors('access');
+        $this->post(route('users.store'), $this->validUser(['access' => 'nope']))->assertSessionHasErrors('access');
         $this->post(route('users.store'), $this->validUser(['name' => '  ']))->assertSessionHasErrors('name');
 
         $this->assertFalse(User::where('email', 'ali@example.test')->exists());
@@ -445,7 +501,7 @@ class AccessControlTest extends TestCase
     public function test_editing_can_move_a_user_to_another_department(): void
     {
         $this->actingAs($this->admin)
-            ->put(route('users.update', $this->viewer), $this->validUser(['email' => $this->viewer->email, 'password' => '', 'password_confirmation' => '', 'role' => 'ene', 'permissions' => [$this->solar->permission->id]]))
+            ->put(route('users.update', $this->viewer), $this->validUser(['email' => $this->viewer->email, 'password' => '', 'password_confirmation' => '', 'departments' => ['ene'], 'permissions' => [$this->solar->permission->id]]))
             ->assertRedirect(route('users.index'));
 
         $user = $this->viewer->fresh();
@@ -491,8 +547,8 @@ class AccessControlTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        $this->put(route('users.update', $this->admin), $this->validUser(['email' => $this->admin->email, 'password' => '', 'password_confirmation' => '', 'role' => 'sed']))
-            ->assertSessionHasErrors('role');
+        $this->put(route('users.update', $this->admin), $this->validUser(['email' => $this->admin->email, 'password' => '', 'password_confirmation' => '']))
+            ->assertSessionHasErrors('access');
         $this->assertTrue($this->admin->fresh()->isAdmin());
 
         $this->patch(route('users.status', $this->admin), ['active' => 0])->assertSessionHasErrors('status');
@@ -502,7 +558,7 @@ class AccessControlTest extends TestCase
     public function test_an_admin_can_save_their_own_details(): void
     {
         $this->actingAs($this->admin)
-            ->put(route('users.update', $this->admin), $this->validUser(['email' => $this->admin->email, 'name' => 'New Name', 'password' => 'NewPass1234', 'password_confirmation' => 'NewPass1234', 'role' => Role::ADMIN, 'permissions' => []]))
+            ->put(route('users.update', $this->admin), $this->validUser(['email' => $this->admin->email, 'name' => 'New Name', 'password' => 'NewPass1234', 'password_confirmation' => 'NewPass1234', 'access' => 'admin', 'permissions' => []]))
             ->assertRedirect(route('users.index'));
 
         $this->assertSame('New Name', $this->admin->fresh()->name);
@@ -617,5 +673,143 @@ class AccessControlTest extends TestCase
         $this->put($url, ['current_password' => 'Current1234', 'password' => 'Current1234', 'password_confirmation' => 'Current1234'])->assertSessionHasErrors('password');
 
         $this->assertTrue(Hash::check('Current1234', $this->viewer->fresh()->password));
+    }
+
+    // Users in several departments
+
+    public function test_an_admin_can_give_a_user_several_departments_and_their_initiatives(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('users.store'), $this->validUser([
+                'departments' => ['sed', 'ene'],
+                'permissions' => [$this->phaseOne->permission->id, $this->solar->permission->id],
+            ]))
+            ->assertRedirect(route('users.index'));
+
+        $user = User::where('email', 'ali@example.test')->firstOrFail();
+
+        $this->assertSame(['ene', 'sed'], $user->getRoleNames()->sort()->values()->all());
+        $this->assertSame(['ene.free_solar_panel', 'sed.psrp_phase_1'], $user->getPermissionNames()->sort()->values()->all());
+        $this->assertSame(['Energy', 'School Education'], $user->departments()->pluck('name')->all());
+
+        $this->actingAs($this->admin)->get(route('users.index'))->assertSee('Energy')->assertSee('School Education');
+    }
+
+    public function test_an_initiative_of_a_department_not_ticked_is_refused(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('users.store'), $this->validUser(['departments' => ['sed'], 'permissions' => [$this->solar->permission->id]]))
+            ->assertSessionHasErrors('permissions');
+
+        $this->assertFalse(User::where('email', 'ali@example.test')->exists());
+    }
+
+    public function test_an_administrator_gets_no_departments(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('users.store'), $this->validUser(['access' => 'admin', 'departments' => ['sed', 'ene']]))
+            ->assertRedirect(route('users.index'));
+
+        $user = User::where('email', 'ali@example.test')->firstOrFail();
+
+        $this->assertSame([Role::ADMIN], $user->getRoleNames()->all());
+        $this->assertTrue($user->departments()->isEmpty());
+    }
+
+    public function test_two_users_can_share_an_initiative(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('users.store'), $this->validUser(['email' => 'second@example.test']))
+            ->assertRedirect(route('users.index'));
+
+        $second = User::where('email', 'second@example.test')->firstOrFail();
+
+        $this->assertTrue($this->viewer->canOpenInitiative($this->phaseOne));
+        $this->assertTrue($second->canOpenInitiative($this->phaseOne));
+    }
+
+    public function test_a_user_with_several_departments_sees_only_theirs(): void
+    {
+        $health = Department::create(['code' => 'HPD', 'name' => 'Health']);
+        $this->seed(AccessControlSeeder::class);
+
+        $user = User::factory()->create()->assignRole(['sed', 'ene']);
+        $user->givePermissionTo(['sed.psrp_phase_1', 'ene.free_solar_panel']);
+        $this->storedFile($this->phaseOne);
+        $this->storedFile($this->phaseTwo);
+
+        // The Departments page lists their two departments, and its cards count only what they can open.
+        $this->actingAs($user)->get(route('departments.index'))
+            ->assertOk()
+            ->assertSee('School Education')
+            ->assertSee('Energy')
+            ->assertDontSee($health->name)
+            ->assertViewHas('topbar', fn ($topbar) => $topbar['stats'][0]['value'] === 2
+                && $topbar['stats'][1]['value'] === 2
+                && $topbar['stats'][3]['value'] === 1);
+
+        $this->actingAs($user)->get(route('departments.show', $this->school))
+            ->assertOk()
+            ->assertSee($this->phaseOne->name)
+            ->assertDontSee($this->phaseTwo->name)
+            ->assertSee('Back to Departments');
+        $this->actingAs($user)->get(route('departments.show', $this->energy))->assertOk()->assertSee($this->solar->name);
+        $this->actingAs($user)->get(route('departments.show', $health))->assertForbidden();
+
+        // Solar has no page built in these tests, so only the access check is looked at there.
+        $this->actingAs($user)->get(route('initiatives.show', $this->phaseOne))->assertOk();
+        $this->assertAllowed($this->actingAs($user)->get(route('initiatives.show', $this->solar)));
+        $this->actingAs($user)->get(route('initiatives.show', $this->phaseTwo))->assertForbidden();
+    }
+
+    public function test_a_user_with_several_departments_is_told_when_one_has_nothing_for_them(): void
+    {
+        $user = User::factory()->create()->assignRole(['sed', 'ene']);
+        $user->givePermissionTo('sed.psrp_phase_1');
+
+        $this->actingAs($user)->get(route('departments.show', $this->energy))
+            ->assertOk()
+            ->assertSee('No initiatives have been given to your account yet')
+            ->assertDontSee('No active initiatives have been registered')
+            ->assertSee('Back to Departments');
+    }
+
+    public function test_editing_can_add_and_remove_departments(): void
+    {
+        $this->actingAs($this->admin)
+            ->put(route('users.update', $this->viewer), $this->validUser(['email' => $this->viewer->email, 'password' => '', 'password_confirmation' => '', 'departments' => ['sed', 'ene'], 'permissions' => [$this->phaseOne->permission->id, $this->solar->permission->id]]))
+            ->assertRedirect(route('users.index'));
+
+        $this->assertSame(['ene', 'sed'], $this->viewer->fresh()->getRoleNames()->sort()->values()->all());
+
+        $this->actingAs($this->admin)
+            ->put(route('users.update', $this->viewer), $this->validUser(['email' => $this->viewer->email, 'password' => '', 'password_confirmation' => '', 'departments' => ['ene'], 'permissions' => [$this->solar->permission->id]]))
+            ->assertRedirect(route('users.index'));
+
+        $user = $this->viewer->fresh();
+
+        $this->assertSame(['ene'], $user->getRoleNames()->all());
+        $this->assertSame(['ene.free_solar_panel'], $user->getPermissionNames()->all());
+        $this->actingAs($user)->get(route('departments.index'))->assertRedirect(route('departments.show', $this->energy));
+    }
+
+    public function test_the_form_offers_every_department_and_marks_the_users_own(): void
+    {
+        $this->viewer->assignRole('ene');
+
+        $page = $this->actingAs($this->admin)->get(route('users.edit', $this->viewer))->assertOk()->getContent();
+
+        $this->assertStringContainsString('name="departments[]" value="sed" data-label="School Education" checked', $page);
+        $this->assertStringContainsString('name="departments[]" value="ene" data-label="Energy" checked', $page);
+        $this->assertStringContainsString('name="access" value="departments" checked', $page);
+    }
+
+    public function test_each_password_box_in_settings_has_a_show_button(): void
+    {
+        $page = $this->actingAs($this->viewer)->get(route('settings.index'))->assertOk()->getContent();
+
+        foreach (['umCurrentPassword', 'umNewPassword', 'umConfirmPassword'] as $box) {
+            $this->assertStringContainsString('data-show-password="'.$box.'"', $page);
+        }
     }
 }

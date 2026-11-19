@@ -72,7 +72,7 @@
                 <thead>
                     <tr>
                         <th scope="col">User</th>
-                        <th scope="col">Role</th>
+                        <th scope="col">Role or departments</th>
                         <th scope="col">Can open</th>
                         <th scope="col">Status</th>
                         <th scope="col"><span class="um-sr">Actions</span></th>
@@ -81,7 +81,9 @@
                 <tbody>
                     @foreach ($users as $listedUser)
                         @php
-                            $role = $listedUser->roles->first();
+                            // Administrator, or each department the user belongs to, by name.
+                            $userRoles = $listedUser->roles->sortBy(fn ($role) => [$role->isAdmin() ? 0 : 1, $role->label()])->values();
+                            $isAdminUser = $userRoles->contains(fn ($role) => $role->isAdmin());
                             $access = $listedUser->permissions->map(fn ($permission) => $permission->initiative?->shortName())->filter()->sort()->values();
                             $isSelf = $listedUser->is(auth()->user());
                         @endphp
@@ -96,19 +98,19 @@
                                 </div>
                             </td>
 
-                            <td data-label="Role">
-                                <div>
-                                    @if ($role)
+                            <td data-label="Role or departments">
+                                <div class="um-roles">
+                                    @forelse ($userRoles as $role)
                                         <span @class(['um-badge', 'um-badge--admin' => $role->isAdmin()])>{{ $role->label() }}</span>
-                                    @else
+                                    @empty
                                         <span class="um-muted">No role</span>
-                                    @endif
+                                    @endforelse
                                 </div>
                             </td>
 
                             <td data-label="Can open">
                                 <div class="um-access" @if ($access->count() > 3) title="{{ $access->implode(', ') }}" @endif>
-                                    @if ($role?->isAdmin())
+                                    @if ($isAdminUser)
                                         <span class="um-muted">Everything</span>
                                     @elseif ($access->isEmpty())
                                         <span class="um-muted">Nothing yet</span>

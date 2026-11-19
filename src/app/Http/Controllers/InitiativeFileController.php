@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -46,6 +47,9 @@ class InitiativeFileController extends Controller
             $initiative->is_active && is_string($type) && array_key_exists($type, self::LABELS),
             404
         );
+
+        // Anyone who can open the initiative may add a report PDF; the other files are for admins only.
+        Gate::authorize($type === InitiativeFile::TYPE_OUR_REPORT ? 'uploadReport' : 'manage', $initiative);
 
         $validator = Validator::make($request->all(), $this->rules($type), $this->messages($type));
 
