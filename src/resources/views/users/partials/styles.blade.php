@@ -817,4 +817,177 @@
             transition: none;
         }
     }
+
+    /* A user can belong to several departments: Administrator or Department user, then the departments,
+       then each department's initiatives. */
+    .um-roles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .um-roles-choice {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    .um-legend {
+        grid-column: 1 / -1;
+        margin-bottom: 2px;
+        padding: 0;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .um-radio {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        min-width: 0;
+        padding: 12px 14px;
+        cursor: pointer;
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        transition: border-color .15s, background .15s;
+    }
+
+    .um-radio:hover {
+        border-color: var(--primary);
+    }
+
+    .um-radio:has(input:checked) {
+        background: var(--primary-light);
+        border-color: var(--primary);
+    }
+
+    .um-roles-choice:disabled .um-radio {
+        cursor: not-allowed;
+        opacity: .75;
+    }
+
+    .um-radio input {
+        flex-shrink: 0;
+        width: 17px;
+        height: 17px;
+        margin: 1px 0 0;
+        accent-color: var(--primary);
+    }
+
+    .um-radio strong,
+    .um-radio small {
+        display: block;
+        overflow-wrap: anywhere;
+    }
+
+    .um-radio strong {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .um-radio small {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .um-access-steps[hidden] {
+        display: none;
+    }
+
+    .um-access-steps {
+        display: grid;
+        gap: 14px;
+    }
+
+    .um-step-title {
+        flex-basis: 100%;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    /* Departments two to a row where there is room. */
+    .um-dept-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-content: start;
+    }
+
+    .um-dept-list .um-option {
+        border-top: 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .um-dept-list .um-picker-empty {
+        grid-column: 1 / -1;
+    }
+
+    .um-initiatives > .um-picker-empty[hidden] {
+        display: none;
+    }
+
+    /* Every ticked department's initiatives are shown in full, each under its own heading, so none is
+       hidden below a box's own scroll; the page scrolls instead. */
+    .um-groups .um-group {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .um-groups .um-group + .um-group {
+        border-top: 1px solid var(--border);
+    }
+
+    /* A department just ticked: its initiatives come first and glow for a moment. */
+    .um-groups .um-group.is-new {
+        animation: um-group-new 1.6s ease-out;
+    }
+
+    @keyframes um-group-new {
+        from { box-shadow: inset 0 0 0 2px var(--primary); background: var(--primary-light); }
+        to { box-shadow: inset 0 0 0 2px transparent; background: transparent; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .um-groups .um-group.is-new {
+            animation: none;
+        }
+    }
+
+    .um-group-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 14px;
+        padding: 6px 14px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .um-group-head strong {
+        min-width: 0;
+        font-size: 12px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .um-group-head .um-select-all {
+        min-height: 32px;
+    }
+
+    .um-groups .um-group .um-option:first-of-type {
+        border-top: 0;
+    }
+
+    @container um-page (max-width: 640px) {
+        .um-roles-choice,
+        .um-dept-list {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
 </style>

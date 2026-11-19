@@ -40,7 +40,7 @@ class UserController extends Controller
             'roles' => Role::forSelection(),
             'topbar' => [
                 'title' => 'Users',
-                'description' => 'Add users, choose their department, and decide which initiatives each of them can open.',
+                'description' => 'Add users, choose their departments, and decide which initiatives each of them can open.',
                 'stats' => [
                     ['label' => 'Total Users', 'value' => User::count()],
                     ['label' => 'Active Users', 'value' => User::where('is_active', true)->count()],
@@ -127,7 +127,7 @@ class UserController extends Controller
 
     private function saveAccess(User $user, UserRequest $request): void
     {
-        $user->syncRoles($request->selectedRole());
+        $user->syncRoles($request->selectedRoles());
         $user->syncPermissions($request->selectedPermissions());
     }
 
@@ -136,7 +136,7 @@ class UserController extends Controller
     {
         Log::info($message, [
             'user_id' => $user->id,
-            'role' => $request->selectedRole()->name,
+            'roles' => $request->selectedRoles()->pluck('name')->all(),
             'permissions' => $request->selectedPermissions()->pluck('name')->all(),
             'password_changed' => $request->filled('password'),
             'changed_by' => $request->user()->id,
@@ -146,6 +146,8 @@ class UserController extends Controller
     private function formData(User $user): array
     {
         $isNew = ! $user->exists;
+        $savedDepartments = $user->roles->whereNotNull('department_id')->pluck('name')->values()->all();
+        $savedAccess = $isNew ? null : ($user->isAdmin() ? UserRequest::ADMIN : UserRequest::DEPARTMENTS);
 
         return [
             'user' => $user,
@@ -154,12 +156,14 @@ class UserController extends Controller
                 'department.initiatives' => fn ($query) => $query->has('permission')->orderBy('short_name'),
                 'department.initiatives.permission',
             ]),
-            'selectedRole' => old('role', $user->roles->first()?->name),
-            'savedRole' => $user->roles->first()?->name,
+            'selectedAccess' => old('access', $savedAccess),
+            'savedAccess' => $savedAccess,
+            'selectedDepartments' => array_map('strval', (array) old('departments', $savedDepartments)),
+            'savedDepartments' => $savedDepartments,
             'selectedPermissions' => array_map('intval', (array) old('permissions', $user->permissions->pluck('id')->all())),
             'topbar' => [
                 'title' => $isNew ? 'Add User' : 'Edit User',
-                'description' => 'Choose a department as the role, then the initiatives this user can open.',
+                'description' => "Choose the user's departments, then the initiatives they can open in each one.",
             ],
         ];
     }

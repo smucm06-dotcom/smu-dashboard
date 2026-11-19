@@ -9,8 +9,10 @@
 
     $currentList = $files->get($listType)?->first();
 
-    // Admins upload and delete. Everyone else sees the same lists, to download from.
+    // Admins upload and delete. Everyone else sees the same lists, to download from, and may also upload
+    // report PDFs, though not delete them.
     $canManage = auth()->user()?->can('manage', $initiative) ?? false;
+    $canUploadReport = auth()->user()?->can('uploadReport', $initiative) ?? false;
 
     $types = [
         $visitsType => [
@@ -92,8 +94,9 @@
         @foreach ($types as $type => $config)
             @php
                 $count = $files->get($type, collect())->count();
-                $buttonText = $canManage ? $config['button'] : ($config['viewButton'] ?? $config['button']);
-                $buttonIcon = $canManage ? $config['icon'] : ($config['viewIcon'] ?? $config['icon']);
+                $canUpload = $canManage || ($type === $reportType && $canUploadReport);
+                $buttonText = $canUpload ? $config['button'] : ($config['viewButton'] ?? $config['button']);
+                $buttonIcon = $canUpload ? $config['icon'] : ($config['viewIcon'] ?? $config['icon']);
             @endphp
             <button
                 type="button"
@@ -116,6 +119,7 @@
         $hasDeleted = ($deletedFile['type'] ?? null) === $type;
         $showEntries = $config['showEntries'] ?? false;
         $uploadedFiles = $files->get($type, collect());
+        $canUpload = $canManage || ($type === $reportType && $canUploadReport);
     @endphp
 
     <dialog
@@ -126,8 +130,8 @@
     >
         <div class="ifile-dialog-header">
             <div>
-                <h4 id="initiativeFileTitle-{{ $type }}">{{ $canManage ? $config['title'] : $config['listTitle'].' ('.number_format($uploadedFiles->count()).')' }}</h4>
-                @if ($canManage)
+                <h4 id="initiativeFileTitle-{{ $type }}">{{ $canUpload ? $config['title'] : $config['listTitle'].' ('.number_format($uploadedFiles->count()).')' }}</h4>
+                @if ($canUpload)
                     <p>{{ $config['hint'] }}</p>
                 @endif
             </div>
@@ -136,7 +140,7 @@
             </button>
         </div>
 
-        @if ($canManage)
+        @if ($canUpload)
         <form
             class="ifile-form"
             method="POST"
@@ -190,8 +194,8 @@
         </form>
         @endif
 
-        <section class="ifile-uploaded" aria-labelledby="{{ $canManage ? 'initiativeFileList-'.$type : 'initiativeFileTitle-'.$type }}">
-            @if ($canManage)
+        <section class="ifile-uploaded" aria-labelledby="{{ $canUpload ? 'initiativeFileList-'.$type : 'initiativeFileTitle-'.$type }}">
+            @if ($canUpload)
                 <h5 id="initiativeFileList-{{ $type }}">{{ $config['listTitle'] }} ({{ number_format($uploadedFiles->count()) }})</h5>
             @endif
 
@@ -624,7 +628,7 @@
         });
 
         document.querySelectorAll('.ifile-dialog').forEach(function (dialog) {
-            // Only admins get the upload form.
+            // Admins get the upload form, and everyone who can open the page gets it for reports.
             const uploadForm = dialog.querySelector('.ifile-form');
 
             dialog.addEventListener('click', function (event) {
