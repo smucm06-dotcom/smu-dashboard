@@ -14,6 +14,7 @@ use App\Http\Controllers\Initiatives\SchoolEducation\SchoolMealProgramController
 use App\Http\Controllers\Initiatives\LocalGovernment\UcMcOfficeServiceDeliveryController;
 use App\Http\Controllers\Initiatives\SpecialEducation\SpecialEducationInstitutesController;
 use App\Http\Controllers\Initiatives\HousingUrbanDevelopment\PunjabSaafPaniAuthorityController;
+use App\Http\Controllers\Initiatives\LocalGovernment\PunjabDevelopmentProgramController;
 // Login routes
 Route::get('/', [AuthController::class, 'showLogin'])
     ->name('home');
@@ -124,6 +125,16 @@ Route::middleware(['auth', 'account.active'])->group(function () {
             Route::post('/punjab-saaf-pani-authority/map-download', [PunjabSaafPaniAuthorityController::class, 'mapDownload'])
                 ->name('initiatives.punjab-saaf-pani-authority.map-download');
 
+            // Chief Minister Punjab Development Program (Local Government & Community Development)
+            Route::get('/punjab-development-program/data', [PunjabDevelopmentProgramController::class, 'data'])
+                ->name('initiatives.punjab-development-program.data');
+
+            Route::get('/punjab-development-program/export', [PunjabDevelopmentProgramController::class, 'export'])
+                ->name('initiatives.punjab-development-program.export');
+
+            Route::post('/punjab-development-program/map-download', [PunjabDevelopmentProgramController::class, 'mapDownload'])
+                ->name('initiatives.punjab-development-program.map-download');
+
             // Anyone who can open the initiative may upload a report PDF. The controller lets only admins
             // upload the other files (InitiativeFileController::store).
             Route::post('/files', [InitiativeFileController::class, 'store'])
@@ -155,6 +166,9 @@ Route::middleware(['auth', 'account.active'])->group(function () {
 
                 Route::post('/punjab-saaf-pani-authority/import', [PunjabSaafPaniAuthorityController::class, 'import'])
                     ->name('initiatives.punjab-saaf-pani-authority.import');
+
+                Route::post('/punjab-development-program/import', [PunjabDevelopmentProgramController::class, 'import'])
+                    ->name('initiatives.punjab-development-program.import');
             });
         });
 

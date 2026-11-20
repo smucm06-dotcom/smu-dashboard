@@ -22,7 +22,10 @@ class LocalGovernmentSeeder extends Seeder
                     'name' => 'UC MC Office Service Delivery',
                     'table_name' => 'lgcd_uc_mc_office_service_delivery',
                 ],
-
+                [
+                    'name' => 'Chief Minister Punjab Development Program',
+                    'table_name' => 'lgcd_punjab_development_program',
+                ],
                 // [
                 //     'name' => 'Chief Minister Lahore Development Program (MCL, 6 Zones)',
                 //     'table_name' => 'lgcd_lahore_development_mcl_6_zones',
@@ -51,11 +54,6 @@ class LocalGovernmentSeeder extends Seeder
                 // [
                 //     'name' => 'Chief Minister LAHR Programme-II',
                 //     'table_name' => 'lgcd_lahr_programme_phase_2',
-                // ],
-
-                // [
-                //     'name' => 'Chief Minister Punjab Development Program',
-                //     'table_name' => 'lgcd_punjab_development_program',
                 // ],
 
                 // [
