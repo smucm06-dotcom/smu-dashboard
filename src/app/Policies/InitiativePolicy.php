@@ -19,4 +19,10 @@ class InitiativePolicy
     {
         return false;
     }
+
+    // Uploading our report PDFs: anyone who can open the initiative. Deleting them stays with admins.
+    public function uploadReport(User $user, Initiative $initiative): bool
+    {
+        return $user->canOpenInitiative($initiative);
+    }
 }

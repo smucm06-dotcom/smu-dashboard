@@ -57,71 +57,109 @@
 
         <section class="um-card">
             <h3>Role and access</h3>
-            <p>The role is the user's department. Then choose the initiatives of that department they can open.</p>
+            <p>An administrator can open and manage everything. A department user belongs to one or more departments and can open only the initiatives chosen for them.</p>
 
-            <div class="um-field">
-                <label for="umRole">Role</label>
-                <select @class(['um-control', 'is-invalid' => $errors->has('role')]) id="umRole" @if ($isSelf) disabled @else name="role" required @endif data-saved-role="{{ $savedRole }}">
-                    <option value="" @selected(! $selectedRole)>Choose a role</option>
-                    @foreach ($roles->filter->isAdmin() as $role)
-                        <option value="{{ $role->name }}" @selected($selectedRole === $role->name)>{{ $role->label() }}</option>
-                    @endforeach
-                    <optgroup label="Departments">
-                        @foreach ($roles->reject->isAdmin() as $role)
-                            <option value="{{ $role->name }}" @selected($selectedRole === $role->name)>{{ $role->label() }}</option>
-                        @endforeach
-                    </optgroup>
-                </select>
-                @if ($isSelf)
-                    {{-- A disabled select is not sent with the form. --}}
-                    <input type="hidden" name="role" value="{{ $savedRole }}">
-                    <span class="um-hint">You cannot change your own role.</span>
-                @endif
-                @error('role') <span class="um-error" role="alert">{{ $message }}</span> @enderror
-            </div>
+            {{-- Sent as "access" (admin or departments), "departments[]" (department role names) and "permissions[]". --}}
+            <fieldset class="um-roles-choice" @if ($isSelf) disabled @endif>
+                <legend class="um-legend">Role</legend>
+                <label class="um-radio">
+                    <input type="radio" name="access" value="{{ \App\Http\Requests\UserRequest::ADMIN }}" @checked($selectedAccess === \App\Http\Requests\UserRequest::ADMIN)>
+                    <span><strong>Administrator</strong><small>Opens and manages everything, including users.</small></span>
+                </label>
+                <label class="um-radio">
+                    <input type="radio" name="access" value="{{ \App\Http\Requests\UserRequest::DEPARTMENTS }}" @checked($selectedAccess === \App\Http\Requests\UserRequest::DEPARTMENTS)>
+                    <span><strong>Department user</strong><small>Opens only the initiatives chosen below, in one or more departments.</small></span>
+                </label>
+            </fieldset>
+            @if ($isSelf)
+                {{-- A disabled choice is not sent with the form. --}}
+                <input type="hidden" name="access" value="{{ $savedAccess }}">
+                @foreach ($savedDepartments as $department)
+                    <input type="hidden" name="departments[]" value="{{ $department }}">
+                @endforeach
+                <span class="um-hint">You cannot change your own role.</span>
+            @endif
+            @error('access') <span class="um-error" role="alert">{{ $message }}</span> @enderror
 
-            <div class="um-picker" id="umPicker">
-                <p class="um-picker-note" id="umNoteNone">Choose a role to see its initiatives.</p>
+            <div class="um-picker" id="umPicker" data-saved-access="{{ $savedAccess }}" data-saved-departments="{{ json_encode($savedDepartments) }}">
+                <p class="um-picker-note" id="umNoteNone">Choose a role to see the departments and their initiatives.</p>
                 <p class="um-picker-note" id="umNoteAdmin" hidden>Administrators can open and manage everything, so there is nothing to choose.</p>
-                <p class="um-message um-message--notice" id="umNoteMoved" hidden>
-                    Saving will remove this user's access to their current department's initiatives.
-                </p>
+                <p class="um-message um-message--notice" id="umNoteMoved" hidden></p>
 
-                <div class="um-picker-panel" id="umPanel" hidden>
-                    <div class="um-picker-tools" id="umTools">
-                        <input class="um-control um-picker-search" id="umPickerSearch" type="search" placeholder="Search initiatives" aria-label="Search initiatives" autocomplete="off">
-                        <label class="um-select-all">
-                            <input type="checkbox" id="umSelectAll">
-                            Select all
-                        </label>
-                        <span class="um-picker-count" id="umCount" aria-live="polite"></span>
-                    </div>
-
-                    <div class="um-chips" id="umChips" aria-label="Selected initiatives" hidden></div>
-
-                    {{-- Only the chosen department's group is enabled, so only its choices are sent. --}}
-                    @foreach ($roles->reject->isAdmin() as $role)
-                        <fieldset class="um-group" data-role="{{ $role->name }}" hidden disabled>
-                            <legend>Initiatives of {{ $role->label() }}</legend>
-
-                            @foreach ($role->department->initiatives as $initiative)
-                                <label class="um-option" data-search="{{ \Illuminate\Support\Str::lower($initiative->shortName().' '.$initiative->name) }}">
-                                    <input type="checkbox" name="permissions[]" value="{{ $initiative->permission->id }}" data-label="{{ $initiative->shortName() }}" @checked(in_array($initiative->permission->id, $selectedPermissions, true))>
+                <div class="um-access-steps" id="umSteps" hidden>
+                    {{-- Step 1: the departments the user belongs to --}}
+                    <div class="um-picker-panel">
+                        <div class="um-picker-tools">
+                            <strong class="um-step-title">1. Departments</strong>
+                            <input class="um-control um-picker-search" id="umDeptSearch" type="search" placeholder="Search departments" aria-label="Search departments" autocomplete="off">
+                            <span class="um-picker-count" id="umDeptCount" aria-live="polite"></span>
+                        </div>
+                        <fieldset class="um-group um-dept-list" id="umDeptList" @if ($isSelf) disabled @endif>
+                            <legend>Departments</legend>
+                            @foreach ($roles->reject->isAdmin() as $role)
+                                @php $initiativeCount = $role->department->initiatives->count(); @endphp
+                                <label class="um-option" data-search="{{ \Illuminate\Support\Str::lower($role->label().' '.$role->department->code) }}">
+                                    <input type="checkbox" name="departments[]" value="{{ $role->name }}" data-label="{{ $role->label() }}" @checked(in_array($role->name, $selectedDepartments, true))>
                                     <span class="um-option-text">
-                                        <strong>{{ $initiative->shortName() }}</strong>
-                                        <small>{{ $initiative->name }}</small>
+                                        <strong>{{ $role->label() }}</strong>
+                                        <small>{{ $initiativeCount === 1 ? '1 initiative' : number_format($initiativeCount).' initiatives' }}</small>
                                     </span>
-                                    @unless ($initiative->is_active)
-                                        <span class="um-badge um-badge--muted">Inactive</span>
-                                    @endunless
                                 </label>
                             @endforeach
-
-                            <p class="um-picker-empty" data-empty="{{ $role->department->initiatives->isEmpty() ? 'always' : 'search' }}" @unless ($role->department->initiatives->isEmpty()) hidden @endunless>
-                                {{ $role->department->initiatives->isEmpty() ? 'This department has no initiatives yet.' : 'No initiatives match your search.' }}
-                            </p>
+                            <p class="um-picker-empty" id="umDeptEmpty" hidden>No departments match your search.</p>
                         </fieldset>
-                    @endforeach
+                    </div>
+                    @error('departments') <span class="um-error" role="alert">{{ $message }}</span> @enderror
+                    @error('departments.*') <span class="um-error" role="alert">{{ $message }}</span> @enderror
+
+                    {{-- Step 2: the initiatives they can open, in each department ticked --}}
+                    <div class="um-picker-panel um-initiatives">
+                        <div class="um-picker-tools" id="umTools">
+                            <strong class="um-step-title">2. Initiatives</strong>
+                            <input class="um-control um-picker-search" id="umPickerSearch" type="search" placeholder="Search initiatives" aria-label="Search initiatives" autocomplete="off">
+                            <span class="um-picker-count" id="umCount" aria-live="polite"></span>
+                        </div>
+
+                        <div class="um-chips" id="umChips" aria-label="Selected initiatives" hidden></div>
+
+                        <p class="um-picker-empty" id="umNoteNoDepartment">Tick a department above to choose its initiatives.</p>
+
+                        {{-- Only the ticked departments' groups are enabled, so only their choices are sent. --}}
+                        <div class="um-groups">
+                            @foreach ($roles->reject->isAdmin() as $role)
+                                <fieldset class="um-group" data-role="{{ $role->name }}" hidden disabled>
+                                    <legend>Initiatives of {{ $role->label() }}</legend>
+                                    <div class="um-group-head">
+                                        <strong>{{ $role->label() }}</strong>
+                                        @if ($role->department->initiatives->isNotEmpty())
+                                            <label class="um-select-all">
+                                                <input type="checkbox" class="um-group-all" aria-label="Select all initiatives of {{ $role->label() }}">
+                                                Select all
+                                            </label>
+                                        @endif
+                                        <span class="um-picker-count um-group-count"></span>
+                                    </div>
+
+                                    @foreach ($role->department->initiatives as $initiative)
+                                        <label class="um-option" data-search="{{ \Illuminate\Support\Str::lower($initiative->shortName().' '.$initiative->name) }}">
+                                            <input type="checkbox" name="permissions[]" value="{{ $initiative->permission->id }}" data-label="{{ $initiative->shortName() }}" @checked(in_array($initiative->permission->id, $selectedPermissions, true))>
+                                            <span class="um-option-text">
+                                                <strong>{{ $initiative->shortName() }}</strong>
+                                                <small>{{ $initiative->name }}</small>
+                                            </span>
+                                            @unless ($initiative->is_active)
+                                                <span class="um-badge um-badge--muted">Inactive</span>
+                                            @endunless
+                                        </label>
+                                    @endforeach
+
+                                    <p class="um-picker-empty" data-empty="{{ $role->department->initiatives->isEmpty() ? 'always' : 'search' }}" @unless ($role->department->initiatives->isEmpty()) hidden @endunless>
+                                        {{ $role->department->initiatives->isEmpty() ? 'This department has no initiatives yet.' : 'No initiatives match your search.' }}
+                                    </p>
+                                </fieldset>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
 
                 @error('permissions') <span class="um-error" role="alert">{{ $message }}</span> @enderror

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -65,10 +66,22 @@ class User extends Authenticatable
         return $this->hasRole(Role::ADMIN);
     }
 
-    // The department this user belongs to, through their role. Admins have none.
-    public function department(): ?Department
+    // The departments this user belongs to, through their roles, by name. A user can belong to several;
+    // admins belong to none, because they can open everything.
+    public function departments(): Collection
     {
-        return $this->roles->first(fn (Role $role) => $role->department_id !== null)?->department;
+        return new Collection($this->roles
+            ->filter(fn (Role $role) => $role->department_id !== null)
+            ->map(fn (Role $role) => $role->department)
+            ->filter()
+            ->sortBy('name')
+            ->values()
+            ->all());
+    }
+
+    public function belongsToDepartment(Department $department): bool
+    {
+        return $this->departments()->contains($department);
     }
 
     public function canOpenInitiative(Initiative $initiative): bool

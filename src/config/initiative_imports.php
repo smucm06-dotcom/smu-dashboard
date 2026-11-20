@@ -2,6 +2,8 @@
 
 use App\Imports\Initiatives\HousingUrbanDevelopment\PspaPlantListImport;
 use App\Imports\Initiatives\HousingUrbanDevelopment\PspaResponseImport;
+use App\Imports\Initiatives\LocalGovernment\PdpCityListImport;
+use App\Imports\Initiatives\LocalGovernment\PdpResponseImport;
 use App\Imports\Initiatives\LocalGovernment\UcMcListImport;
 use App\Imports\Initiatives\LocalGovernment\UcMcResponseImport;
 use App\Imports\Initiatives\SchoolEducation\AdditionalClassroomResponseImport;
@@ -45,5 +47,9 @@ return [
     'punjab_saaf_pani_authority' => [
         InitiativeFile::TYPE_DEPARTMENT_LIST => PspaPlantListImport::class,
         InitiativeFile::TYPE_DEPARTMENT_RESPONSE => PspaResponseImport::class,
+    ],
+    'lgcd_punjab_development_program' => [
+        InitiativeFile::TYPE_DEPARTMENT_LIST => PdpCityListImport::class,
+        InitiativeFile::TYPE_DEPARTMENT_RESPONSE => PdpResponseImport::class,
     ],
 ];
