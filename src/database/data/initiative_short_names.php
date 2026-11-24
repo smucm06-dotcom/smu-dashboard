@@ -85,6 +85,8 @@ return [
     'hed_cm_punjab_laptop_program' => 'Laptop Program',
     'hed_establishment_new_colleges' => 'New Colleges',
     'hed_honhaar_scholarship_program' => 'Honhaar Scholarship',
+    // The call center campaign for the same programme (CallCenterSeeder).
+    'hed_honhaar_scholarship' => 'Honhaar Scholarship',
     'hed_it_labs_colleges' => 'College IT Labs',
     'hed_it_labs_colleges_phase_2' => 'College IT Labs Phase 2',
     'hed_missing_facilities_colleges' => 'College Missing Facilities',

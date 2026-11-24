@@ -12,6 +12,26 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Reads the call center pages' big uploads in the background (config/call_center.php), so the browser never
+  # waits on a file of thousands of rows. After changing the code, restart it: docker compose restart queue
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /var/www/html
+    user: www-data
+    command: ["php", "-d", "memory_limit=1024M", "artisan", "queue:work", "--queue=call-center,default", "--timeout=3600", "--tries=1", "--sleep=2", "--memory=1024"]
+    environment:
+      # Longer than the longest upload, so a file being read is never handed out a second time.
+      DB_QUEUE_RETRY_AFTER: "3700"
+    volumes:
+      - ./src:/var/www/html
+      - smu_vendor:/var/www/html/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
   web:
     image: nginx:1.27-alpine
     ports:

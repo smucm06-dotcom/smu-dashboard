@@ -48,6 +48,9 @@ Route::middleware(['auth', 'account.active'])->group(function () {
             ->middleware('can:view,department')
             ->name('departments.show');
 
+        // Call center campaigns: the Call Center menu and the campaigns' own routes.
+        require __DIR__.'/call_center.php';
+
         // Initiatives. Add a new initiative's routes inside this group, so they are protected too.
         Route::prefix('initiatives/{initiative}')->middleware('can:view,initiative')->group(function () {
             Route::get('/', [InitiativeController::class, 'show'])

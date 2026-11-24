@@ -18,4 +18,6 @@ return [
     'lgcd_uc_mc_office_service_delivery' => UcMcOfficeServiceDeliveryController::class,
     'punjab_saaf_pani_authority' => PunjabSaafPaniAuthorityController::class,
     'lgcd_punjab_development_program' => PunjabDevelopmentProgramController::class,
+    // A call center campaign (see config/call_center.php).
+    'hed_honhaar_scholarship' => \App\Http\Controllers\Initiatives\HigherEducation\HonhaarScholarshipController::class,
 ];
