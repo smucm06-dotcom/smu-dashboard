@@ -51,6 +51,9 @@ class DatabaseSeeder extends Seeder
             Initiatives\TransportMassTransitSeeder::class,
             Initiatives\WomenDevelopmentSeeder::class,
 
+            // Call center campaigns, kept apart from the departments' initiatives.
+            CallCenterSeeder::class,
+
             // Last, because it needs the admin user and every department and initiative.
             AccessControlSeeder::class,
         ]);

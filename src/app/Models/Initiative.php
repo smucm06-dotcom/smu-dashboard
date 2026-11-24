@@ -46,6 +46,18 @@ class Initiative extends Model
             : $query->whereIn('id', $user->permissions->pluck('initiative_id'));
     }
 
+    // Call center campaigns open from the Call Center menu (config/call_center.php); the Departments pages
+    // list and count the other initiatives only.
+    public function scopeCallCenter(Builder $query): Builder
+    {
+        return $query->whereIn('table_name', \App\Support\CallCenterCampaigns::tables());
+    }
+
+    public function scopeWithoutCallCenter(Builder $query): Builder
+    {
+        return $query->whereNotIn('table_name', \App\Support\CallCenterCampaigns::tables());
+    }
+
     public function shortName(): string
     {
         return $this->short_name ?: $this->name;

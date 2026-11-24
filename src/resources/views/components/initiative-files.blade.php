@@ -1,4 +1,4 @@
-@props(['initiative', 'files', 'visitsUploadUrl', 'visitMatch' => 'visit date and time', 'matchNote' => null, 'listItems' => 'schools'])
+@props(['initiative', 'files', 'visitsUploadUrl', 'visitMatch' => 'visit date and time', 'matchNote' => null, 'listItems' => 'schools', 'typeOverrides' => [], 'backgroundUploads' => []])
 
 @php
     // A page without EMIS codes says how its visits are matched (matchNote) and what its list holds (listItems).
@@ -73,6 +73,15 @@
         ],
     ];
 
+    // A page can word a button's window its own way (the call center pages: typeOverrides), and have a
+    // button's file read in the background with a progress bar (backgroundUploads: type => upload address,
+    // see call_center/shared/upload-progress). Other pages pass neither and keep the wording above.
+    foreach ($typeOverrides as $overriddenType => $override) {
+        if (isset($types[$overriddenType])) {
+            $types[$overriddenType] = array_merge($types[$overriddenType], $override);
+        }
+    }
+
     // The response file whose replies the page uses now. A new CSV or Excel file replaces it.
     $currentResponse = $files->get($responseType, collect())
         ->first(fn ($file) => strtolower(pathinfo($file->original_name, PATHINFO_EXTENSION)) !== 'pdf');
@@ -144,8 +153,9 @@
         <form
             class="ifile-form"
             method="POST"
-            action="{{ $isVisits ? $visitsUploadUrl : route('initiatives.files.store', $initiative) }}"
+            action="{{ $backgroundUploads[$type] ?? ($isVisits ? $visitsUploadUrl : route('initiatives.files.store', $initiative)) }}"
             enctype="multipart/form-data"
+            @isset($backgroundUploads[$type]) data-background-upload @endisset
             @if ($type === $listType && $currentList)
                 data-confirm="Replace &quot;{{ $currentList->original_name }}&quot; with the new file? The current list will be permanently deleted."
             @elseif ($type === $responseType && $currentResponse)
@@ -154,9 +164,9 @@
         >
             @csrf
 
-            @unless ($isVisits)
+            @if (! $isVisits || isset($backgroundUploads[$type]))
                 <input type="hidden" name="type" value="{{ $type }}">
-            @endunless
+            @endif
 
             @if ($hasFailed)
                 <p class="ifile-error" role="alert">{{ $failedUpload['message'] }}</p>
@@ -260,7 +270,7 @@
                 </div>
 
                 @if ($isVisits && $canManage)
-                    <p class="ifile-list-note">Deleting a file here removes only the file, not the visit records saved from it.</p>
+                    <p class="ifile-list-note">{{ $config['listNote'] ?? 'Deleting a file here removes only the file, not the visit records saved from it.' }}</p>
                 @endif
             @endif
         </section>

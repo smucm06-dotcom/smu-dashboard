@@ -45,13 +45,19 @@
                         {{ $stat['label'] }}
                     </span>
 
+                    {{-- A page can send the figure already written ("87.1%"); otherwise it is a whole number. --}}
                     <strong class="topbar-stat-value" @isset($stat['id']) id="{{ $stat['id'] }}" @endisset>
-                        {{ ($stat['value'] ?? null) === null ? '—' : number_format((float) $stat['value']) }}
+                        {{ $stat['display'] ?? (($stat['value'] ?? null) === null ? '—' : number_format((float) $stat['value'])) }}
                     </strong>
 
                     {{-- Optional line under the figure. Only pages that send one show it. --}}
                     @isset($stat['info'])
                         <span class="topbar-stat-info" @isset($stat['id']) id="{{ $stat['id'] }}-sub" @endisset>{{ $stat['info'] }}</span>
+                    @endisset
+
+                    {{-- An optional second line (the call center pages). --}}
+                    @isset($stat['extra'])
+                        <span class="topbar-stat-info topbar-stat-extra" @isset($stat['id']) id="{{ $stat['id'] }}-x" @endisset>{{ $stat['extra'] }}</span>
                     @endisset
 
                 </div>

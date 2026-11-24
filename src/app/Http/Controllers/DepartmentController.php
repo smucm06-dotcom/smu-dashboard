@@ -30,8 +30,10 @@ class DepartmentController extends Controller
 
         // The initiatives switched on, which are the ones with a page, that this user can open. The visits
         // and reports count these only.
+        // Call center campaigns open from the Call Center menu and are not counted here.
         $initiatives = Initiative::where('is_active', true)
             ->visibleTo($user)
+            ->withoutCallCenter()
             ->whereIn('department_id', $departments->pluck('id'))
             ->get(['id', 'department_id', 'table_name']);
 
@@ -41,7 +43,7 @@ class DepartmentController extends Controller
             // Numbered 1 to 4 by this page's styles, like the initiative pages' cards.
             'stats' => [
                 ['label' => 'Departments', 'value' => $departments->count()],
-                ['label' => 'Departments with Initiatives', 'value' => Initiative::visibleTo($user)->whereIn('department_id', $departments->pluck('id'))->distinct()->count('department_id')],
+                ['label' => 'Departments with Initiatives', 'value' => Initiative::visibleTo($user)->withoutCallCenter()->whereIn('department_id', $departments->pluck('id'))->distinct()->count('department_id')],
                 [
                     'label' => 'Field visits by SMU',
                     'value' => $this->fieldVisits($initiatives),
@@ -67,11 +69,12 @@ class DepartmentController extends Controller
         // initiatives given to them, and every card below counts those only.
         $initiatives = $department->initiatives()
             ->visibleTo($request->user())
+            ->withoutCallCenter()
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
-        $totalInitiatives = $department->initiatives()->visibleTo($request->user())->count();
+        $totalInitiatives = $department->initiatives()->visibleTo($request->user())->withoutCallCenter()->count();
 
         // Visits, reports and recent visits count this department's own initiatives, the ones listed here.
         $topbar = [

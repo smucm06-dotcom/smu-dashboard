@@ -21,14 +21,34 @@
         </button>
     </div>
 
+    @php
+        // A call center campaign's page is an initiative's page, but it belongs to the Call Center menu.
+        $onCallCenter = request()->routeIs('call-center.*')
+            || \App\Support\CallCenterCampaigns::includes(request()->route('initiative') instanceof \App\Models\Initiative ? request()->route('initiative') : null);
+
+        // Shown to admins, and to users given at least one campaign.
+        $user = auth()->user();
+        $showCallCenter = $user !== null && ($user->isAdmin() || \App\Models\Initiative::callCenter()->where('is_active', true)->visibleTo($user)->exists());
+    @endphp
+
     <nav class="sidebar-nav" aria-label="Main navigation">
         <a href="{{ route('departments.index') }}"
            title="Departments"
-           class="nav-link {{ request()->routeIs('departments.*', 'initiatives.*') ? 'active' : '' }}"
+           class="nav-link {{ request()->routeIs('departments.*', 'initiatives.*') && ! $onCallCenter ? 'active' : '' }}"
            >
             <span class="nav-icon"><i data-lucide="building-2"></i></span>
             <span class="nav-label">Departments</span>
         </a>
+
+        @if ($showCallCenter)
+            <a href="{{ route('call-center.index') }}"
+               title="Call Center"
+               class="nav-link {{ $onCallCenter ? 'active' : '' }}"
+               >
+                <span class="nav-icon"><i data-lucide="headset"></i></span>
+                <span class="nav-label">Call Center</span>
+            </a>
+        @endif
 
         <!-- Reports route is not registered yet; keep the placeholder non-interactive. -->
         <div class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" title="Reports (coming soon)">
